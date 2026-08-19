@@ -146,7 +146,10 @@ jobs:
           fingerprint: ${{ secrets.ALWAYSDATA_SSH_FINGERPRINT }}
           script: |
             cd "${{ secrets.ALWAYSDATA_DEPLOY_PATH }}"
-            npm install --omit=dev --no-audit --no-fund
+            test -f package-lock.json || { echo "package-lock.json absent du déploiement" >&2; exit 1; }
+            npm_cache_dir="$(mktemp -d "${TMPDIR:-/tmp}/angel-dreamer-npm.XXXXXX")"
+            trap 'rm -rf "$npm_cache_dir"' EXIT
+            npm ci --omit=dev --no-audit --no-fund --cache "$npm_cache_dir"
 
       - name: Restart Alwaysdata site
         env:
