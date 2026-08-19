@@ -135,6 +135,18 @@ jobs:
           strip_components: 1
           overwrite: true
 
+      - name: Install production dependencies on Alwaysdata
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ALWAYSDATA_SSH_HOST }}
+          port: ${{ secrets.ALWAYSDATA_SSH_PORT }}
+          username: ${{ secrets.ALWAYSDATA_SSH_USER }}
+          password: ${{ secrets.ALWAYSDATA_SSH_PASSWORD }}
+          fingerprint: ${{ secrets.ALWAYSDATA_SSH_FINGERPRINT }}
+          script: |
+            cd "${{ secrets.ALWAYSDATA_DEPLOY_PATH }}"
+            npm install --omit=dev --no-audit --no-fund
+
       - name: Restart Alwaysdata site
         env:
           ALWAYSDATA_API_KEY: ${{ secrets.ALWAYSDATA_API_KEY }}
