@@ -1,0 +1,96 @@
+.full {
+    grid-column: 1/-1
+}
+
+.full small {
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.4
+}
+
+.full input:disabled {
+    opacity: .65;
+    cursor: not-allowed
+}
+
+.preview {
+    --preview-bg: #f5f2eb;
+    --preview-surface: #fff;
+    --preview-text: #111;
+    --preview-muted: #6b6861;
+    --preview-line: #d8d3ca;
+    background: var(--preview-bg);
+    color: var(--preview-text);
+    transition: background .2s, color .2s
+}
+
+.previewDark {
+    --preview-bg: #111210;
+    --preview-surface: #191a18;
+    --preview-text: #f3ede2;
+    --preview-muted: #aaa59c;
+    --preview-line: #393a36
+}
+
+.preview header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--preview-line);
+    background: var(--preview-bg);
+    color: var(--preview-text)
+}
+
+.preview header i {
+    color: #e84227;
+    font-style: normal
+}
+
+.page {
+    min-height: 330px;
+    padding: 34px 28px;
+    background: var(--preview-bg)
+}
+
+.page>small {
+    color: #e84227;
+    font-size: 7px;
+    font-weight: 800;
+    letter-spacing: .16em
+}
+
+.page h2 {
+    margin: 4px 0 6px;
+    font: 900 38px/1 "Barlow Condensed"
+}
+
+.page>p {
+    max-width: 360px;
+    margin: 0;
+    color: var(--preview-muted);
+    font-size: 9px
+}
+
+.empty {
+    display: grid;
+    place-items: center;
+    min-height: 110px;
+    margin-top: 28px;
+    border: 1px dashed var(--preview-line);
+    background: var(--preview-surface);
+    color: var(--preview-muted);
+    font-size: 8px;
+    text-align: center;
+    padding: 14px
+}
+
+.preview footer {
+    background: #111;
+    color: #fff
+}
+
+@media(max-width:900px) {
+    .page {
+        min-height: 270px
+    }
+}

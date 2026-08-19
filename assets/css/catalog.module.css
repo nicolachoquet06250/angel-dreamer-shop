@@ -1,0 +1,66 @@
+.catalogPage {
+    max-width: 1400px;
+    min-height: 60vh;
+    margin: auto;
+    padding: 55px 5vw 90px
+}
+
+.catalogPage>small {
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .16em
+}
+
+.catalogPage>h1 {
+    font: 900 clamp(48px, 7vw, 82px)/1 "Barlow Condensed";
+    margin: 5px 0 8px
+}
+
+.catalogPage>p {
+    color: var(--muted);
+    margin: 0 0 35px
+}
+
+.filterNav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin: 22px 0 30px;
+    padding-bottom: 8px
+}
+
+.filterNav button {
+    flex: none;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text);
+    padding: 10px 16px;
+    cursor: pointer
+}
+
+.filterNav .filterActive {
+    background: var(--text);
+    color: var(--bg)
+}
+
+.universeCard {
+    height: 135px;
+    border: 1px solid var(--line);
+    background: linear-gradient(135deg, #e4d5b7 0 35%, #171717 35% 52%, #e84227 52% 72%, #244b83 72%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 12px;
+    color: white
+}
+
+.universeCard b {
+    font-size: 21px
+}
+
+@media(max-width:600px) {
+    .universeCard {
+        min-width: 230px
+    }
+}

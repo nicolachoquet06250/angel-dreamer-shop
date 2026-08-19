@@ -1,0 +1,148 @@
+name: Tests, coverage and production deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: production-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    name: Tests and coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run tests with coverage
+        id: test-suite
+        continue-on-error: true
+        run: npm run test:coverage
+
+      - name: Normalize coverage links
+        if: always()
+        run: |
+          test -d coverage
+          node scripts/fix-coverage-links.mjs coverage
+
+      - name: Publish coverage branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          archive="$(mktemp -d)/coverage.tar"
+          tar -cf "$archive" coverage
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan test-coverage
+          git rm -rf .
+          tar -xf "$archive"
+          touch coverage/.nojekyll
+          git add coverage
+          git commit -m "Coverage for ${GITHUB_SHA}"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:test-coverage
+
+      - name: Fail when tests failed
+        if: steps.test-suite.outcome != 'success'
+        run: exit 1
+
+  build:
+    name: Production build
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build production application
+        env:
+          NODE_ENV: production
+        run: npm run build
+
+      - name: Prepare deployment artifact
+        run: |
+          mkdir -p deploy
+          mv .output deploy/.output
+          cp package.json deploy/package.json
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: deploy
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    name: Deploy to Alwaysdata
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Download production build
+        uses: actions/download-artifact@v4
+        with:
+          name: production-build
+          path: deploy
+
+      - name: Create production environment file
+        env:
+          PRODUCTION_ENV_FILE: ${{ secrets.PRODUCTION_ENV_FILE }}
+        run: |
+          printf '%s\n' "$PRODUCTION_ENV_FILE" > deploy/.env
+          chmod 600 deploy/.env
+
+      - name: Deploy to Alwaysdata over SSH
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.ALWAYSDATA_SSH_HOST }}
+          port: ${{ secrets.ALWAYSDATA_SSH_PORT }}
+          username: ${{ secrets.ALWAYSDATA_SSH_USER }}
+          password: ${{ secrets.ALWAYSDATA_SSH_PASSWORD }}
+          source: deploy/.output,deploy/package.json,deploy/.env
+          target: ${{ secrets.ALWAYSDATA_DEPLOY_PATH }}
+          strip_components: 1
+          overwrite: true
+
+      - name: Restart Alwaysdata site
+        env:
+          ALWAYSDATA_API_KEY: ${{ secrets.ALWAYSDATA_API_KEY }}
+          ALWAYSDATA_ACCOUNT: ${{ secrets.ALWAYSDATA_ACCOUNT }}
+          ALWAYSDATA_SITE_ID: ${{ secrets.ALWAYSDATA_SITE_ID }}
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --basic \
+            --user "${ALWAYSDATA_API_KEY} account=${ALWAYSDATA_ACCOUNT}:" \
+            "https://api.alwaysdata.com/v1/site/${ALWAYSDATA_SITE_ID}/restart/"
