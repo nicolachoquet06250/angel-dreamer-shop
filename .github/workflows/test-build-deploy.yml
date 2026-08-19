@@ -93,6 +93,7 @@ jobs:
           mkdir -p deploy
           mv .output deploy/.output
           cp package.json deploy/package.json
+          cp package-lock.json deploy/package-lock.json
 
       - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
@@ -130,7 +131,7 @@ jobs:
           port: ${{ secrets.ALWAYSDATA_SSH_PORT }}
           username: ${{ secrets.ALWAYSDATA_SSH_USER }}
           password: ${{ secrets.ALWAYSDATA_SSH_PASSWORD }}
-          source: deploy/.output,deploy/package.json,deploy/.env
+          source: deploy/.output,deploy/package.json,deploy/package-lock.json,deploy/.env
           target: ${{ secrets.ALWAYSDATA_DEPLOY_PATH }}
           strip_components: 1
           overwrite: true
