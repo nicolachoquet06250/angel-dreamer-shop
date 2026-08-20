@@ -121,6 +121,13 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Create production environment file
+        env:
+          PRODUCTION_ENV_FILE: ${{ secrets.PRODUCTION_ENV_FILE }}
+        run: |
+          printf '%s\n' "$PRODUCTION_ENV_FILE" > .env
+          chmod 600 .env
+
       - name: Make migrations
         run: npm run db:migrate
 
