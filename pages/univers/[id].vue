@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import type {Category, Product, SiteContent, Universe} from '~/types/shop';
 import {defaultSiteContent} from '~/types/shop';
 import styles from '~/assets/css/site.module.css';
@@ -6,6 +6,8 @@ import catalog from '~/assets/css/catalog.module.css';
 import {renderSeoTemplate} from '~/utils/seo-template';
 
 const route = useRoute();
+const {data: auth} = await useFetch<{user: {role: string} | null}>('/api/auth/me');
+const cartDisabled = computed(() => auth.value?.user?.role === 'demo');
 const router = useRouter();
 const universeKey = String(route.params.id);
 const {data: universes} = await useFetch<Universe[]>('/api/universes', {default: () => []});
@@ -52,8 +54,8 @@ function filter(slug = '') {
 </script>
 <template>
   <main>
-    <StoreHeader :announcement="content.announcement" :payment-label="content.paymentLabel"
-                 :logo-text="content.logoText"/>
+    <StoreHeader :announcement="content.announcement" :logo-text="content.logoText"
+                 :payment-label="content.paymentLabel"/>
     <section :class="catalog.catalogPage"><small>{{ content.universeEyebrow }}</small>
       <h1>{{ universe?.title }}</h1>
       <nav :class="catalog.filterNav" aria-label="Filtrer les produits">
@@ -65,7 +67,7 @@ function filter(slug = '') {
         </button>
       </nav>
       <div :class="styles.productGrid">
-        <ProductCard v-for="product in products" :key="product.id" :product="product"/>
+        <ProductCard v-for="product in products" :key="product.id" :product="product" :cart-disabled="cartDisabled"/>
       </div>
       <p v-if="!products.length" :class="styles.empty">{{ content.universeEmptyText }}</p></section>
     <footer :class="styles.footer"><strong>{{ content.footerBrand }}</strong><span>{{ content.footerText }}</span>

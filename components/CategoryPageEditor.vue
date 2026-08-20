@@ -2,8 +2,9 @@
 import type {SiteContent} from '~/types/shop';
 import editor from '~/assets/css/content-editor.module.css';
 import category from '~/assets/css/category-page-editor.module.css'
+import type {ValidationIssue} from '~/utils/admin-validation'
 
-defineProps<{ previewDark: boolean }>();
+defineProps<{ previewDark: boolean; validationIssues?: ValidationIssue[] }>();
 const model = defineModel<SiteContent>({required: true})
 </script>
 <template>
@@ -13,10 +14,16 @@ const model = defineModel<SiteContent>({required: true})
         <summary>Contenu générique <span>PAGE CATÉGORIE</span></summary>
         <div :class="editor.fields"><label :class="category.full">Titre de la page<input
             value="Nom de la catégorie (dynamique)" disabled><small>Le titre reprend automatiquement le nom de la
-          catégorie consultée.</small></label><label>Surtitre<input v-model="model.categoryEyebrow"></label><label
+          catégorie consultée.</small></label><label>Surtitre<input v-model="model.categoryEyebrow">
+          <FieldValidation :issues="validationIssues" field="categoryEyebrow"/>
+        </label><label
             :class="category.full">Texte d’introduction<textarea v-model="model.categoryDescription"
-                                                                 rows="3"/></label><label :class="category.full">Message
-          si la catégorie est vide<textarea v-model="model.categoryEmptyText" rows="3"/></label></div>
+                                                                 rows="3"/>
+          <FieldValidation :issues="validationIssues" field="categoryDescription"/>
+        </label><label :class="category.full">Message
+          si la catégorie est vide<textarea v-model="model.categoryEmptyText" rows="3"/>
+          <FieldValidation :issues="validationIssues" field="categoryEmptyText"/>
+        </label></div>
       </details>
     </div>
     <aside :class="[editor.preview,category.preview,previewDark&&category.previewDark]">

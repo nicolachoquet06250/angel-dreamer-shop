@@ -3,8 +3,9 @@ import type {Category, SiteContent} from '~/types/shop';
 import editor from '~/assets/css/content-editor.module.css';
 import page from '~/assets/css/category-page-editor.module.css';
 import catalog from '~/assets/css/catalog.module.css'
+import type {ValidationIssue} from '~/utils/admin-validation'
 
-defineProps<{ previewDark: boolean; categories: Category[] }>();
+defineProps<{ previewDark: boolean; categories: Category[]; validationIssues?: ValidationIssue[] }>();
 const model = defineModel<SiteContent>({required: true})
 </script>
 <template>
@@ -14,9 +15,15 @@ const model = defineModel<SiteContent>({required: true})
         <summary>Contenu générique <span>PAGE UNIVERS</span></summary>
         <div :class="editor.fields"><label :class="page.full">Titre de la page<input
             value="Nom de l’univers (dynamique)" disabled><small>Le titre reprend automatiquement le nom de l’univers
-          consulté.</small></label><label>Surtitre<input v-model="model.universeEyebrow"></label><label>Libellé du
-          filtre global<input v-model="model.universeAllLabel"></label><label :class="page.full">Message si aucun
-          produit ne correspond<textarea v-model="model.universeEmptyText" rows="3"/></label></div>
+          consulté.</small></label><label>Surtitre<input v-model="model.universeEyebrow">
+          <FieldValidation :issues="validationIssues" field="universeEyebrow"/>
+        </label><label>Libellé du
+          filtre global<input v-model="model.universeAllLabel">
+          <FieldValidation :issues="validationIssues" field="universeAllLabel"/>
+        </label><label :class="page.full">Message si aucun
+          produit ne correspond<textarea v-model="model.universeEmptyText" rows="3"/>
+          <FieldValidation :issues="validationIssues" field="universeEmptyText"/>
+        </label></div>
       </details>
     </div>
     <aside :class="[editor.preview,page.preview,previewDark&&page.previewDark]">
@@ -26,8 +33,8 @@ const model = defineModel<SiteContent>({required: true})
       <section :class="page.page"><small>{{ model.universeEyebrow }}</small>
         <h2>Nom de l’univers</h2>
         <nav :class="catalog.filterNav">
-          <button :class="catalog.filterActive">{{ model.universeAllLabel }}</button>
-          <button v-for="item in categories.slice(0,3)" :key="item.id">{{ item.label }}</button>
+          <button data-demo-interactive :class="catalog.filterActive">{{ model.universeAllLabel }}</button>
+          <button v-for="item in categories.slice(0,3)" :key="item.id" data-demo-interactive>{{ item.label }}</button>
         </nav>
         <div :class="page.empty">{{ model.universeEmptyText }}</div>
       </section>

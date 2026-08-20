@@ -6,8 +6,9 @@ type LibraryImage = ImageAsset & { usageCount: number }
 const props = withDefaults(defineProps<{
   modelValue: ImageAsset | null;
   label?: string;
-  required?: boolean
-}>(), {label: 'Image', required: false});
+  required?: boolean;
+  readonly?: boolean
+}>(), {label: 'Image', required: false, readonly: false});
 const emit = defineEmits<{ (event: 'update:modelValue', value: ImageAsset | null): void }>();
 const imageFor = useThemedImage();
 const error = ref('');
@@ -477,16 +478,16 @@ function setHeight(event: Event) {
              alt="Aperçu de l’image">
         <div v-else :class="styles.placeholder">Aucune image</div>
       </div>
-      <button type="button" @click="showLibrary">
+      <button type="button" data-demo-interactive @click="showLibrary">
         {{ modelValue ? 'Changer dans la bibliothèque' : 'Choisir dans la bibliothèque' }}
       </button>
       <button v-if="modelValue" type="button" @click="$emit('update:modelValue',null)">Retirer</button>
     </div>
-    <div v-if="modelValue" :class="styles.dimensions"><label>Largeur affichée <span><input :value="modelValue.width"
+    <div v-if="modelValue" :class="styles.dimensions"><label>Largeur affichée <span><input :value="modelValue.width" :disabled="readonly"
                                                                                            type="number" min="1"
                                                                                            @input="setWidth"> px</span></label><b
         aria-label="Ratio verrouillé">🔒 Ratio {{ modelValue.naturalWidth }}:{{ modelValue.naturalHeight }}</b><label>Hauteur
-      affichée <span><input :value="modelValue.height" type="number" min="1" @input="setHeight"> px</span></label></div>
+      affichée <span><input :value="modelValue.height" :disabled="readonly" type="number" min="1" @input="setHeight"> px</span></label></div>
     <small>Image réutilisable depuis la bibliothèque · dimensions synchronisées avec l’aperçu</small><em
         v-if="error">{{ error }}</em>
     <Teleport to="body">
@@ -499,11 +500,11 @@ function setHeight(event: Event) {
           </header>
           <div :class="styles.grid"><label :class="styles.add"
                                            :for="inputId"><b>+</b><span>Ajouter une image</span><input :id="inputId"
-                                                                                                       type="file"
+                                                                                                       type="file" :disabled="readonly"
                                                                                                        accept="image/jpeg,image/png,image/webp,image/gif"
                                                                                                        @change="choose"></label>
             <article v-for="image in library" :key="image.id" :class="modelValue?.id===image.id?styles.selected:''">
-              <button type="button" :class="styles.pick" @click="select(image)"><span :class="styles.pair"><img
+              <button type="button" :disabled="readonly" :class="styles.pick" @click="select(image)"><span :class="styles.pair"><img
                   :src="image.content" alt="Version claire">
                 <img v-if="image.darkVariant"
                      :src="image.darkVariant.content"
@@ -511,10 +512,12 @@ function setHeight(event: Event) {
               </span><span>{{ image.width }} × {{ image.height }} px</span>
               </button>
               <label
-                  :class="styles.darkUpload">{{ image.darkVariant ? 'Remplacer la version sombre' : '＋ Ajouter une version sombre' }}<input
-                  type="file" accept="image/jpeg,image/png,image/webp,image/gif"
-                  @change="uploadDark($event,image)"></label>
-              <button type="button" :class="styles.deleteImage"
+                  :class="styles.darkUpload">{{
+                  image.darkVariant ? 'Remplacer la version sombre' : '＋ Ajouter une version sombre'
+                }}<input
+                  type="file" :disabled="readonly" accept="image/jpeg,image/png,image/webp,image/gif"
+                    @change="uploadDark($event,image)"></label>
+              <button type="button" :disabled="readonly" :class="styles.deleteImage"
                       :title="image.usageCount?`Image utilisée ${image.usageCount} fois`:'Supprimer cette image'"
                       :aria-label="`Supprimer l’image ${image.id}`" @click="removeImage(image)">Supprimer
               </button>

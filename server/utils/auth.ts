@@ -128,8 +128,11 @@ export async function requireUser(event: H3Event) {
 
 export async function requireAdmin(event: H3Event) {
     const user = await requireUser(event);
-    if (user.role !== "admin")
+    if (!["admin", "demo"].includes(user.role))
         throw createError({statusCode: 403, statusMessage: "Droits administrateur requis"});
+    const method = String(event.method || "GET").toUpperCase();
+    if (user.role === "demo" && !["GET", "HEAD"].includes(method))
+        throw createError({statusCode: 403, statusMessage: "Le compte de démonstration dispose d’un accès en lecture seule"});
     return user;
 }
 

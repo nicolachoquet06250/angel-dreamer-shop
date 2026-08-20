@@ -6,6 +6,8 @@ import catalog from '~/assets/css/catalog.module.css';
 import {renderSeoTemplate} from '~/utils/seo-template';
 
 const route = useRoute();
+const {data: auth} = await useFetch<{user: {role: string} | null}>('/api/auth/me');
+const cartDisabled = computed(() => auth.value?.user?.role === 'demo');
 const {data: categories} = await useFetch<Category[]>('/api/categories', {default: () => []});
 const category = computed(() => categories.value.find(item => item.slug === String(route.params.slug)));
 if (!category.value) throw createError({statusCode: 404, statusMessage: 'Catégorie introuvable'});
@@ -43,7 +45,7 @@ useSeoMeta({
       <h1>{{ category?.label }}</h1>
       <p>{{ content.categoryDescription }}</p>
       <div :class="styles.productGrid">
-        <ProductCard v-for="product in products" :key="product.id" :product="product"/>
+        <ProductCard v-for="product in products" :key="product.id" :product="product" :cart-disabled="cartDisabled"/>
       </div>
       <p v-if="!products.length" :class="styles.empty">{{ content.categoryEmptyText }}</p></section>
     <footer :class="styles.footer"><strong>{{ content.footerBrand }}</strong><span>{{ content.footerText }}</span>

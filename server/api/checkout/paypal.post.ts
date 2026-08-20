@@ -1,5 +1,6 @@
 export default defineEventHandler(async event => {
-    await requireUser(event);
+    const user = await requireUser(event);
+    if (user.role === 'demo') throw createError({statusCode: 403, statusMessage: 'Le paiement est indisponible avec un compte de démonstration'});
     const config = useRuntimeConfig(event);
     const clientId = config.public.paypalClientId;
     if (!clientId || !config.paypalClientSecret) throw createError({

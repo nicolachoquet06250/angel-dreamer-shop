@@ -35,4 +35,16 @@ describe('carte produit', () => {
         })
         expect(screen.queryByRole('img')).not.toBeInTheDocument()
     })
+
+    it('désactive totalement l’ajout au panier pour un compte de démonstration', async () => {
+        add.mockClear()
+        render(ProductCard, {
+            props: {product, cartDisabled: true},
+            global: {stubs: {NuxtLink: {template: '<a><slot /></a>'}}}
+        })
+        const button = screen.getByRole('button', {name: 'Panier indisponible avec un compte de démonstration'})
+        expect(button).toBeDisabled()
+        await fireEvent.click(button)
+        expect(add).not.toHaveBeenCalled()
+    })
 })

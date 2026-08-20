@@ -3,12 +3,13 @@ import type {Category, ImageAsset, Product, SiteContent, Universe} from '~/types
 import styles from '~/assets/css/content-editor.module.css';
 import publicStyles from '~/assets/css/site.module.css';
 import engagementStyles from '~/assets/css/engagement-icons.module.css';
+import type {ValidationIssue} from '~/utils/admin-validation';
 
 const pickerStyles = useCssModule('pickerStyles');
 const fourCardStyles = useCssModule('fourCardStyles');
 const previewTheme = useCssModule('previewTheme');
 const engagementPreview = useCssModule('engagementPreview')
-const props = defineProps<{ products: Product[]; previewDark: boolean }>();
+const props = withDefaults(defineProps<{ products: Product[]; previewDark: boolean; readonly?: boolean; validationIssues?: ValidationIssue[] }>(), {readonly: false});
 const model = defineModel<SiteContent>({required: true});
 const universes = defineModel<Universe[]>('universes', {required: true});
 const categories = defineModel<Category[]>('categories', {required: true});
@@ -413,6 +414,21 @@ function scaled(image: Universe['image']) {
 }
 </style>
 <style module="previewTheme">
+.light {
+  --bg: #f5f2eb;
+  --surface: #fffdf8;
+  --text: #0e0e0d;
+  --muted: #6c675e;
+  --line: #d7d1c8;
+  background: #f5f2eb !important;
+  color: #0e0e0d !important;
+  border-color: #d7d1c8 !important
+}
+
+.light > div {
+  border-color: #d7d1c8 !important
+}
+
 .dark {
   --bg: #111210;
   --surface: #181916;
@@ -460,9 +476,12 @@ function scaled(image: Universe['image']) {
           <div :class="styles.fields"><label v-for="field in group.fields" :key="field[0]">{{ field[1] }}<textarea
               v-if="field[0] === 'heroTitle' || field[0] === 'heroSubtitle' || (field[0] as unknown as 'workshopText') === 'workshopText'"
               v-model="model[field[0]]" rows="3" maxlength="500"/><input v-else v-model="model[field[0]]"
-                                                                         maxlength="500"></label></div>
+                                                                         maxlength="500">
+            <FieldValidation :issues="validationIssues" :field="field[0]"/>
+          </label></div>
           <div v-if="group.title === 'Bannière principale'" :class="styles.images">
-            <ImageUpload v-model="model.heroImage" label="Image principale"/>
+            <ImageUpload v-model="model.heroImage" label="Image principale" :readonly="readonly"/>
+            <FieldValidation :issues="validationIssues" field="heroImage"/>
           </div>
         </details>
         <details v-if="index === 0">
@@ -475,8 +494,12 @@ function scaled(image: Universe['image']) {
                   @click="moveCategory(categoryIndex,1)">↓</button><button type="button"
                                                                            @click="removeCategory(categoryIndex)">Supprimer</button></span>
               </div>
-              <label>Label<input v-model="category.label" maxlength="80" required></label><label>Slug<input
-                v-model="category.slug" maxlength="80" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required></label><label
+              <label>Label<input v-model="category.label" maxlength="80" required>
+                <FieldValidation :issues="validationIssues" :field="`categories.${categoryIndex}.label`"/>
+              </label><label>Slug<input
+                v-model="category.slug" maxlength="80" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required>
+              <FieldValidation :issues="validationIssues" :field="`categories.${categoryIndex}.slug`"/>
+            </label><label
                 :class="styles.active"><input v-model="category.active" type="checkbox"> Visible dans la
               navigation</label></article>
             <button type="button" :class="styles.addUniverse" @click="addCategory">+ Ajouter un lien</button>
@@ -487,13 +510,13 @@ function scaled(image: Universe['image']) {
         <summary>Engagements<span>3 engagements</span></summary>
         <div :class="styles.universeEditor">
           <article><label>Premier engagement<input v-model="model.value1" maxlength="500"></label>
-            <ImageUpload v-model="model.value1Image" label="Icône du premier engagement" required/>
+            <ImageUpload v-model="model.value1Image" label="Icône du premier engagement" :readonly="readonly" required/>
           </article>
           <article><label>Deuxième engagement<input v-model="model.value2" maxlength="500"></label>
-            <ImageUpload v-model="model.value2Image" label="Icône du deuxième engagement" required/>
+            <ImageUpload v-model="model.value2Image" label="Icône du deuxième engagement" :readonly="readonly" required/>
           </article>
           <article><label>Troisième engagement<input v-model="model.value3" maxlength="500"></label>
-            <ImageUpload v-model="model.value3Image" label="Icône du troisième engagement" required/>
+            <ImageUpload v-model="model.value3Image" label="Icône du troisième engagement" :readonly="readonly" required/>
           </article>
         </div>
       </details>
@@ -509,10 +532,15 @@ function scaled(image: Universe['image']) {
                 @click="move(index, 1)">↓</button><button type="button"
                                                           @click="removeUniverse(index)">Supprimer</button></span></div>
             <label>Nom<input
-                v-model="universe.title" maxlength="100" required></label><label>Slug (facultatif)<input
+                v-model="universe.title" maxlength="100" required>
+              <FieldValidation :issues="validationIssues" :field="`universes.${index}.title`"/>
+            </label><label>Slug (facultatif)<input
               v-model="universe.slug" maxlength="100" pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-              placeholder="L’identifiant sera utilisé si vide"></label>
-            <ImageUpload v-model="universe.image" :label="`Image de ${universe.title}`" required/>
+              placeholder="L’identifiant sera utilisé si vide">
+            <FieldValidation :issues="validationIssues" :field="`universes.${index}.slug`"/>
+          </label>
+            <ImageUpload v-model="universe.image" :label="`Image de ${universe.title}`" :readonly="readonly" required/>
+            <FieldValidation :issues="validationIssues" :field="`universes.${index}.image`"/>
             <label
                 :class="styles.active"><input v-model="universe.active" type="checkbox"> Visible sur la
               boutique</label>
@@ -533,14 +561,16 @@ function scaled(image: Universe['image']) {
                  :alt="product.name">
             <div><strong>{{ product.name }}</strong><small>{{ (product.priceCents / 100).toFixed(2).replace('.', ',') }}
               €</small></div>
-            <button type="button" @click="openPicker(index)">Modifier</button>
+            <button type="button" data-demo-interactive @click="openPicker(index)">Modifier</button>
             <button type="button" @click="removeFavorite(index)">Supprimer</button>
           </article>
-          <button v-if="favoriteIds.length<4" type="button" :class="pickerStyles.add" @click="openPicker()">+
+          <button v-if="favoriteIds.length<4" type="button" data-demo-interactive :class="pickerStyles.add" @click="openPicker()">+
             Sélectionner un produit
           </button>
           <p>{{ favoriteIds.length }} produit{{ favoriteIds.length > 1 ? 's' : '' }} sur 4
-            sélectionné{{ favoriteIds.length > 1 ? 's' : '' }}</p></div>
+            sélectionné{{ favoriteIds.length > 1 ? 's' : '' }}</p>
+          <FieldValidation :issues="validationIssues" field="favoriteIds"/>
+        </div>
       </details>
       <details>
         <summary>Atelier<span>{{ workshopFields.length }} champs</span></summary>
@@ -550,7 +580,7 @@ function scaled(image: Universe['image']) {
                                                                                                           maxlength="500"></label>
         </div>
         <div :class="styles.images">
-          <ImageUpload v-model="model.workshopImage" label="Image de l’atelier"/>
+          <ImageUpload v-model="model.workshopImage" label="Image de l’atelier" :readonly="readonly"/>
         </div>
       </details>
       <details>
@@ -559,7 +589,7 @@ function scaled(image: Universe['image']) {
             v-model="model[field[0]]" maxlength="500"></label></div>
       </details>
     </div>
-    <aside :class="[styles.preview,props.previewDark&&previewTheme.dark]">
+    <aside :class="[styles.preview,props.previewDark ? previewTheme.dark : previewTheme.light]">
       <div :class="styles.previewLabel">APERÇU EN DIRECT</div>
       <div :class="styles.miniAnnouncement">{{ model.announcement }}</div>
       <div :class="styles.miniHeader">{{ model.logoText }}.</div>
@@ -645,7 +675,7 @@ function scaled(image: Universe['image']) {
           <div :class="pickerStyles.grid">
             <button v-for="product in products" :key="product.id" type="button"
                     :class="favoriteIds.includes(product.id)?pickerStyles.selected:''"
-                    :disabled="replaceIndex!==null&&favoriteIds.some((id,index)=>id===product.id&&index!==replaceIndex)"
+                    :disabled="readonly||(replaceIndex!==null&&favoriteIds.some((id,index)=>id===product.id&&index!==replaceIndex))"
                     @click="pickProduct(product.id)">
               <img v-if="imageFor(product.image)"
                    :src="imageFor(product.image)?.content + `?size=${imageFor(product.image)?.width}x${imageFor(product.image)?.height}`"

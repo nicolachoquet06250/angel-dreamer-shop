@@ -24,6 +24,12 @@ afterEach(() => {
 })
 
 describe('paiement Stripe', () => {
+    it('refuse tout paiement à un compte de démonstration', async () => {
+        vi.stubGlobal('requireUser', async () => ({email: 'demo@example.test', role: 'demo'}))
+        // @ts-ignore
+        const {default: handler} = await import('~/server/api/checkout/stripe.post.ts')
+        await expect(handler({} as H3Event<EventHandlerRequest>)).rejects.toMatchObject({statusCode: 403})
+    })
     it('refuse de démarrer sans clé secrète', async () => {
         vi.stubGlobal('useRuntimeConfig', () => ({stripeSecretKey: ''}))
         // @ts-ignore
@@ -47,6 +53,12 @@ describe('paiement Stripe', () => {
 })
 
 describe('paiement PayPal', () => {
+    it('refuse tout paiement à un compte de démonstration', async () => {
+        vi.stubGlobal('requireUser', async () => ({email: 'demo@example.test', role: 'demo'}))
+        // @ts-ignore
+        const {default: handler} = await import('~/server/api/checkout/paypal.post.ts')
+        await expect(handler({} as H3Event<EventHandlerRequest>)).rejects.toMatchObject({statusCode: 403})
+    })
     it('refuse de démarrer sans identifiants', async () => {
         vi.stubGlobal('useRuntimeConfig', () => ({public: {paypalClientId: ''}, paypalClientSecret: ''}))
         // @ts-ignore
@@ -70,7 +82,7 @@ describe('paiement PayPal', () => {
         // @ts-ignore
         const {default: handler} = await import('~/server/api/checkout/paypal.post.ts')
         await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({url: 'https://paypal.test/approve'})
-        expect((fetchMock.mock.calls[0] as {body: any}[])[1]!.body).toContain('29.80')
+        expect((fetchMock.mock.calls[0] as { body: any }[])[1]!.body).toContain('29.80')
     })
 
     it('convertit un refus PayPal en erreur 502', async () => {

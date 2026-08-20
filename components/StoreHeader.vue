@@ -33,13 +33,13 @@ function toggle() {
       <NuxtLink v-for="category in categories" :key="category.id" :to="`/categories/${category.slug}`">
         {{ category.label }}
       </NuxtLink>
-      <NuxtLink v-if="session?.user?.role==='admin'" to="/admin">Administrer</NuxtLink>
+      <NuxtLink v-if="['admin','demo'].includes(session?.user?.role || '')" to="/admin">Administrer</NuxtLink>
     </nav>
     <div :class="styles.headerActions">
       <button @click="toggle" :aria-label="dark?'Mode clair':'Mode sombre'">{{ dark ? '☾' : '☀' }}</button>
       <NuxtLink :to="session?.user?'/compte':'/connexion'" :aria-label="session?.user?'Mon compte':'Se connecter'">♙
       </NuxtLink>
-      <NuxtLink to="/panier" :class="styles.bag">▢<b>{{ count }}</b></NuxtLink>
+      <NuxtLink v-if="session?.user?.role!=='demo'" to="/panier" :class="styles.bag">▢<b>{{ count }}</b></NuxtLink>
     </div>
   </header>
 </template>

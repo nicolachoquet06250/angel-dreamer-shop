@@ -1,5 +1,6 @@
 import {
     type AnyMySqlColumn,
+    index,
     int,
     longtext,
     mysqlTable,
@@ -82,8 +83,20 @@ export const users = mysqlTable('users', {
     role: varchar('role', {length: 32}).notNull().default('customer'),
     active: tinyint('active').notNull().default(1),
     mustChangePassword: tinyint('must_change_password').notNull().default(0),
+    createdByAdminId: int('created_by_admin_id', {unsigned: true}).references((): AnyMySqlColumn => users.id, {onDelete: 'set null'}),
     createdAt: varchar('created_at', {length: 32}).notNull()
 })
+
+export const passwordResetCodes = mysqlTable('password_reset_codes', {
+    id: int('id', {unsigned: true}).autoincrement().primaryKey(),
+    userId: int('user_id', {unsigned: true}).notNull().references(() => users.id, {onDelete: 'cascade'}),
+    codeHash: varchar('code_hash', {length: 255}).notNull(),
+    purpose: varchar('purpose', {length: 32}).notNull(),
+    expiresAt: varchar('expires_at', {length: 32}).notNull(),
+    attempts: int('attempts', {unsigned: true}).notNull().default(0),
+    usedAt: varchar('used_at', {length: 32}),
+    createdAt: varchar('created_at', {length: 32}).notNull()
+}, table => [index('idx_password_reset_user_created').on(table.userId, table.createdAt)])
 
 export const orders = mysqlTable('orders', {
     id: int('id', {unsigned: true}).autoincrement().primaryKey(),

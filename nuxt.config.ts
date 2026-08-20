@@ -1,3 +1,5 @@
+import vue from '@vitejs/plugin-vue'
+
 export default defineNuxtConfig({
     srcDir: ".",
     compatibilityDate: "2025-07-15",
@@ -8,6 +10,7 @@ export default defineNuxtConfig({
     modules: [],
     nitro: {
         preset: "node-server",
+        rollupConfig: {plugins: [vue()]},
         externals: {
             traceOptions: {
                 base: process.cwd(),

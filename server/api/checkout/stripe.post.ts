@@ -2,6 +2,7 @@ import Stripe from "stripe";
 
 export default defineEventHandler(async event => {
     const user = await requireUser(event);
+    if (user.role === 'demo') throw createError({statusCode: 403, statusMessage: 'Le paiement est indisponible avec un compte de démonstration'});
     const config = useRuntimeConfig(event);
     if (!config.stripeSecretKey) throw createError({
         statusCode: 503,

@@ -126,7 +126,8 @@ export async function ready(db: AppDatabase) {
         db.prepare('CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, label TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, position INTEGER NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1)'),
         db.prepare('CREATE TABLE IF NOT EXISTS product_categories (product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE, category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE, PRIMARY KEY(product_id,category_id))'),
         db.prepare('CREATE TABLE IF NOT EXISTS product_universes (product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE, universe_id INTEGER NOT NULL REFERENCES universes(id) ON DELETE CASCADE, PRIMARY KEY(product_id,universe_id))'),
-        db.prepare('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, first_name TEXT, last_name TEXT, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT \'customer\', active INTEGER NOT NULL DEFAULT 1, must_change_password INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, first_name TEXT, last_name TEXT, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT \'customer\', active INTEGER NOT NULL DEFAULT 1, must_change_password INTEGER NOT NULL DEFAULT 0, created_by_admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL, created_at TEXT NOT NULL)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS password_reset_codes (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, code_hash TEXT NOT NULL, purpose TEXT NOT NULL, expires_at TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, used_at TEXT, created_at TEXT NOT NULL)'),
         db.prepare('CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, provider TEXT NOT NULL, provider_order_id TEXT NOT NULL, amount_cents INTEGER NOT NULL, status TEXT NOT NULL, customer_email TEXT, created_at TEXT NOT NULL)')
     ])
     const {results: imageColumns} = await db.prepare('PRAGMA table_info(images)').all<any>();
@@ -149,12 +150,13 @@ export async function ready(db: AppDatabase) {
     const {results: currentProductColumns} = await db.prepare('PRAGMA table_info(products)').all<any>();
     if (!currentProductColumns.some(column => column.name === 'featured_position')) await db.prepare('ALTER TABLE products ADD COLUMN featured_position INTEGER').run()
     await db.batch([
-        db.prepare('CREATE INDEX IF NOT EXISTS idx_images_dark_image_id ON images(dark_image_id)'), db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_products_slug ON products(slug)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_products_active_featured ON products(active,featured)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_products_image_id ON products(image_id)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_site_content_images_image_id ON site_content_images(image_id)'), db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_universes_slug ON universes(slug) WHERE slug IS NOT NULL AND slug<>''"), db.prepare('CREATE INDEX IF NOT EXISTS idx_universes_position ON universes(position)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_universes_image_id ON universes(image_id)'), db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_categories_position ON categories(position)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_product_categories_category ON product_categories(category_id,product_id)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_product_universes_universe ON product_universes(universe_id,product_id)'), db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_provider_id ON orders(provider,provider_order_id)'), db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)')
+        db.prepare('CREATE INDEX IF NOT EXISTS idx_images_dark_image_id ON images(dark_image_id)'), db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_products_slug ON products(slug)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_products_active_featured ON products(active,featured)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_products_image_id ON products(image_id)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_site_content_images_image_id ON site_content_images(image_id)'), db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_universes_slug ON universes(slug) WHERE slug IS NOT NULL AND slug<>''"), db.prepare('CREATE INDEX IF NOT EXISTS idx_universes_position ON universes(position)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_universes_image_id ON universes(image_id)'), db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_categories_position ON categories(position)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_product_categories_category ON product_categories(category_id,product_id)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_product_universes_universe ON product_universes(universe_id,product_id)'), db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_provider_id ON orders(provider,provider_order_id)'), db.prepare('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)'), db.prepare('CREATE INDEX IF NOT EXISTS idx_password_reset_user_created ON password_reset_codes(user_id,created_at)')
     ])
     const {results: userColumns} = await db.prepare('PRAGMA table_info(users)').all<any>();
     const userNames = new Set(userColumns.map(column => column.name));
     if (!userNames.has('first_name')) await db.prepare('ALTER TABLE users ADD COLUMN first_name TEXT').run();
-    if (!userNames.has('last_name')) await db.prepare('ALTER TABLE users ADD COLUMN last_name TEXT').run()
+    if (!userNames.has('last_name')) await db.prepare('ALTER TABLE users ADD COLUMN last_name TEXT').run();
+    if (!userNames.has('created_by_admin_id')) await db.prepare('ALTER TABLE users ADD COLUMN created_by_admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL').run()
     for (const key of imageContentKeys) {
         const legacy = await db.prepare('SELECT value FROM site_content WHERE `key`=?').bind(key).first<{
             value: string
@@ -310,7 +312,21 @@ async function initializeMySql(db: AppDatabase) {
             role VARCHAR(32) NOT NULL DEFAULT 'customer',
             active TINYINT(1) NOT NULL DEFAULT 1,
             must_change_password TINYINT(1) NOT NULL DEFAULT 0,
-            created_at VARCHAR(32) NOT NULL
+            created_by_admin_id INT UNSIGNED NULL,
+            created_at VARCHAR(32) NOT NULL,
+            CONSTRAINT fk_users_created_by_admin FOREIGN KEY (created_by_admin_id) REFERENCES users(id) ON DELETE SET NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+        `CREATE TABLE IF NOT EXISTS password_reset_codes (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            user_id INT UNSIGNED NOT NULL,
+            code_hash VARCHAR(255) NOT NULL,
+            purpose VARCHAR(32) NOT NULL,
+            expires_at VARCHAR(32) NOT NULL,
+            attempts INT UNSIGNED NOT NULL DEFAULT 0,
+            used_at VARCHAR(32) NULL,
+            created_at VARCHAR(32) NOT NULL,
+            INDEX idx_password_reset_user_created (user_id,created_at),
+            CONSTRAINT fk_password_reset_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
         `CREATE TABLE IF NOT EXISTS orders (
             id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -324,6 +340,9 @@ async function initializeMySql(db: AppDatabase) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
     ]
     for (const sql of statements) await db.prepare(sql).run()
+
+    const creatorColumn = await db.prepare("SELECT COUNT(*) total FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' AND COLUMN_NAME='created_by_admin_id'").first<{total:number}>()
+    if (!Number(creatorColumn?.total)) await db.prepare('ALTER TABLE users ADD COLUMN created_by_admin_id INT UNSIGNED NULL, ADD CONSTRAINT fk_users_created_by_admin FOREIGN KEY (created_by_admin_id) REFERENCES users(id) ON DELETE SET NULL').run()
 
     const productCount = await db.prepare('SELECT COUNT(*) total FROM products').first<{total:number}>()
     if (!Number(productCount?.total)) for (const product of defaults) await db.prepare('INSERT INTO products(slug,name,description,price_cents,image_id,category,featured,active) VALUES(?,?,?,?,NULL,?,?,1)').bind(...product).run()

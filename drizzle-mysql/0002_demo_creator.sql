@@ -1,0 +1,2 @@
+ALTER TABLE `users` ADD `created_by_admin_id` int unsigned;--> statement-breakpoint
+ALTER TABLE `users` ADD CONSTRAINT `users_created_by_admin_id_users_id_fk` FOREIGN KEY (`created_by_admin_id`) REFERENCES `users`(`id`) ON DELETE set null ON UPDATE no action;

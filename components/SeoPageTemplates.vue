@@ -6,7 +6,7 @@ import whatsappIcon from '~/assets/icons/whatsapp.png'
 import xIcon from '~/assets/icons/x.png'
 
 type PageType = 'product' | 'universe' | 'category' | 'universeCategory'
-const props = defineProps<{ modelValue: SiteContent; page: PageType }>()
+const props = withDefaults(defineProps<{ modelValue: SiteContent; page: PageType; readonly?: boolean }>(), {readonly: false})
 const emit = defineEmits<{ (event: 'update:modelValue', value: SiteContent): void }>()
 const content = computed({get: () => props.modelValue, set: value => emit('update:modelValue', value)})
 const preview = ref<'facebook' | 'x' | 'whatsapp' | 'instagram'>('facebook')
@@ -57,7 +57,11 @@ const definitions = {
       ogTitle: 'seoUniverseCategoryOgTitle',
       ogDescription: 'seoUniverseCategoryOgDescription'
     },
-    variables: {['Nom de l’univers']: 'Manga & Japon', ['Nom de la catégorie']: 'Vêtements', 'Nom du site': 'Angel Dreamer'}
+    variables: {
+      ['Nom de l’univers']: 'Manga & Japon',
+      ['Nom de la catégorie']: 'Vêtements',
+      'Nom du site': 'Angel Dreamer'
+    }
   }
 } as const
 const definition = computed(() => definitions[props.page])
@@ -69,9 +73,9 @@ const renderedDescription = computed(() => replace(value(definition.value.fields
 const renderedOgTitle = computed(() => replace(value(definition.value.fields.ogTitle)))
 const renderedOgDescription = computed(() => replace(value(definition.value.fields.ogDescription)))
 const productUsesLibraryImage = computed(() => content.value.seoProductImageMode === 'library')
-const socialPreviewImage = computed(() => {
-  if (props.page === 'product' && productUsesLibraryImage.value) return content.value.seoProductOgImage
-  return content.value.seoOgImage
+const socialPreviewImageUrl = computed(() => {
+  if (props.page === 'product' && productUsesLibraryImage.value) return content.value.seoProductOgImage?.content || '/og.png'
+  return content.value.seoOgImage?.content || '/og.png'
 })
 
 function update(key: SeoKey, event: Event) {
@@ -115,7 +119,7 @@ function insert(key: SeoKey, label: string) {
           <label><input v-model="content.seoProductImageMode" type="radio" value="library"> Choisir une image dans la
             médiathèque</label>
         </div>
-        <ImageUpload v-if="productUsesLibraryImage" v-model="content.seoProductOgImage"
+        <ImageUpload v-if="productUsesLibraryImage" v-model="content.seoProductOgImage" :readonly="readonly"
                      label="Image sociale des pages produit"/>
       </article>
     </section>
@@ -131,7 +135,7 @@ function insert(key: SeoKey, label: string) {
         <div :class="$style.previewSelector">
           <h3>{{ preview === 'x' ? 'X (Twitter)' : preview[0]!.toUpperCase() + preview.slice(1) }}</h3>
           <div :class="$style.switcher">
-            <button v-for="network in ['facebook','x','whatsapp','instagram']" :key="network" type="button"
+            <button v-for="network in ['facebook','x','whatsapp','instagram']" :key="network" type="button" data-demo-interactive
                     :aria-label="`Aperçu ${network}`" :title="network" :aria-pressed="preview === network"
                     @click="preview = network as any">
               <img :src="socialIcons[network as keyof typeof socialIcons]"
@@ -140,8 +144,7 @@ function insert(key: SeoKey, label: string) {
           </div>
         </div>
       </div>
-      <section :class="[$style.social,$style[preview]]"><img v-if="socialPreviewImage" :src="socialPreviewImage.content"
-                                                             alt="">
+      <section :class="[$style.social,$style[preview]]"><img :src="socialPreviewImageUrl" alt="Aperçu de l’image sociale">
         <div><small>{{ content.seoSiteName }}</small><strong>{{ renderedOgTitle }}</strong>
           <p>{{ renderedOgDescription }}</p></div>
       </section>

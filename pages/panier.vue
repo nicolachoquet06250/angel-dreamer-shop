@@ -2,11 +2,14 @@
 import styles from '~/assets/css/site.module.css';
 
 const imageFor = useThemedImage();
+const {data: auth} = await useFetch<{user: {role: string} | null}>('/api/auth/me');
+const cartDisabled = computed(() => auth.value?.user?.role === 'demo');
 const {cart, total, remove} = useShopCart();
 const loading = ref('');
 const error = ref('');
 
 async function pay(provider: 'stripe' | 'paypal') {
+  if (cartDisabled.value) return;
   loading.value = provider;
   error.value = '';
   try {
@@ -32,7 +35,8 @@ async function pay(provider: 'stripe' | 'paypal') {
     <div :class="styles.cartPage">
       <NuxtLink to="/">< Continuer mes achats</NuxtLink>
       <h1>Votre panier</h1>
-      <div v-if="!cart.length" :class="styles.empty">Votre panier est vide.</div>
+      <div v-if="cartDisabled" :class="styles.empty">Le panier est indisponible avec un compte de démonstration.</div>
+      <div v-else-if="!cart.length" :class="styles.empty">Votre panier est vide.</div>
       <template v-else>
         <div v-for="line in cart" :key="line.product.id" :class="styles.cartLine"><img
             v-if="imageFor(line.product.image)" :src="imageFor(line.product.image)?.content" :alt="line.product.name"

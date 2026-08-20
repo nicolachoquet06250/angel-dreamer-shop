@@ -4,8 +4,9 @@ import facebookIcon from '~/assets/icons/facebook.png'
 import instagramIcon from '~/assets/icons/instagram.png'
 import whatsappIcon from '~/assets/icons/whatsapp.png'
 import xIcon from '~/assets/icons/x.png'
+import type {ValidationIssue} from '~/utils/admin-validation'
 
-const props = defineProps<{ modelValue: SiteContent }>()
+const props = withDefaults(defineProps<{ modelValue: SiteContent; readonly?: boolean; validationIssues?: ValidationIssue[] }>(), {readonly: false})
 const emit = defineEmits<{ (event: 'update:modelValue', value: SiteContent): void }>()
 const $requestUrl = useRequestURL()
 const content = computed({get: () => props.modelValue, set: value => emit('update:modelValue', value)})
@@ -46,11 +47,11 @@ async function runAudit() {
     <HorizontalCarousel :track-class="$style.seoSubTabs" label="les sous-onglets de référencement">
       <button
           v-for="section in [{id:'home',label:'Page d’accueil'},{id:'product',label:'Pages produit'},{id:'universe',label:'Pages univers'},{id:'universeCategory',label:'Page catégories d’univers'},{id:'category',label:'Pages catégorie'}]"
-          :key="section.id" type="button" :aria-pressed="seoSection===section.id"
+          :key="section.id" type="button" data-demo-interactive :aria-pressed="seoSection===section.id"
           @click="seoSection=section.id as any">{{ section.label }}
       </button>
     </HorizontalCarousel>
-    <SeoPageTemplates v-if="seoSection!=='home'" v-model="content" :page="seoSection"/>
+    <SeoPageTemplates v-if="seoSection!=='home'" v-model="content" :page="seoSection" :readonly="readonly"/>
     <div v-else :class="$style.layout">
       <div :class="$style.fields">
         <details open>
@@ -60,13 +61,19 @@ async function runAudit() {
                 v-model="content.seoSiteName" maxlength="70"></label>
             <label>Titre principal <span>{{ 60 - content.seoTitle.length }} caractères restants</span><input
                 v-model="content.seoTitle"
-                maxlength="60"></label>
+                maxlength="60">
+              <FieldValidation :issues="validationIssues" field="seoTitle"/>
+            </label>
             <label :class="$style.wide">Meta description <span>{{ 160 - content.seoDescription.length }} caractères restants</span><textarea
-                v-model="content.seoDescription" maxlength="160" rows="3"/></label>
+                v-model="content.seoDescription" maxlength="160" rows="3"/>
+              <FieldValidation :issues="validationIssues" field="seoDescription"/>
+            </label>
             <label :class="$style.wide">Mots-clés<textarea v-model="content.seoKeywords" rows="2"
                                                            placeholder="mot-clé, autre mot-clé"/></label>
             <label>URL canonique<input v-model="content.seoCanonicalUrl" type="url"
-                                       placeholder="https://example.com"></label>
+                                       placeholder="https://example.com">
+              <FieldValidation :issues="validationIssues" field="seoCanonicalUrl"/>
+            </label>
             <label>Directives robots<select v-model="content.seoRobots">
               <option>index, follow, max-image-preview:large</option>
               <option>index, nofollow</option>
@@ -94,8 +101,9 @@ async function runAudit() {
               }} caractères restants</span><textarea v-model="content.seoOgDescription" maxlength="160"
                                                      rows="3"/></label>
             <label>Locale<input v-model="content.seoOgLocale" placeholder="fr_FR"></label>
-            <ImageUpload v-model="content.seoOgImage" :class="$style.wide"
+            <ImageUpload v-model="content.seoOgImage" :class="$style.wide" :readonly="readonly"
                          label="Image sociale (1200 × 630 px recommandé)"/>
+            <FieldValidation :issues="validationIssues" field="seoOgImage"/>
             <label>Format de carte X<select v-model="content.seoTwitterCard">
               <option value="summary_large_image">Grande image</option>
               <option value="summary">Résumé compact</option>
@@ -143,7 +151,7 @@ async function runAudit() {
           <div :class="$style.previewSelector">
             <h3>{{ preview === 'x' ? 'X (Twitter)' : preview[0]!.toUpperCase() + preview.slice(1) }}</h3>
             <div :class="$style.switcher">
-              <button v-for="network in ['facebook','x','whatsapp','instagram']" :key="network" type="button"
+              <button v-for="network in ['facebook','x','whatsapp','instagram']" :key="network" type="button" data-demo-interactive
                       :aria-label="`Aperçu ${network}`" :title="network"
                       :aria-pressed="preview===network" @click="preview=network as any">
                 <img :src="socialIcons[network as keyof typeof socialIcons]" :class="network === 'x' && $style.xIcon"
@@ -172,7 +180,7 @@ async function runAudit() {
                     :class="audit.score >= 80 ? $style.good : audit.score >= 50 ? $style.medium : $style.bad">{{
                 audit.score
               }}/100 · {{ audit.grade }}</strong></header>
-          <button type="button" :disabled="auditing" @click="runAudit">{{
+          <button type="button" data-demo-interactive :disabled="auditing" @click="runAudit">{{
               auditing ? 'Analyse…' : 'Lancer l’audit complet'
             }}
           </button>

@@ -36,6 +36,20 @@
       "when": 1787055108879,
       "tag": "0004_reflective_jean_grey",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1787232279252,
+      "tag": "0005_password_reset_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1787239863482,
+      "tag": "0006_demo_creator",
+      "breakpoints": true
     }
   ]
 }

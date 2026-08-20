@@ -16,6 +16,8 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@vue-email/components": "^0.0.21",
+    "@vue-email/render": "^0.0.9",
     "better-sqlite3": "^13.0.3",
     "drizzle-orm": "^0.45.2",
     "mysql2": "^3.23.3",

@@ -84,6 +84,14 @@ async function logout() {
   color: var(--accent)
 }
 
+.passwordLink {
+  display: block;
+  margin: 20px 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline
+}
+
 @media (max-width: 560px) {
   .names {
     grid-template-columns:1fr
@@ -103,9 +111,15 @@ async function logout() {
         <p v-if="message" :class="profileStyles.success">✓ {{ message }}</p>
         <p v-if="error" :class="profileStyles.error">{{ error }}</p></form>
       <div><span>Adresse e-mail</span><strong>{{ data.user.email }}</strong></div>
-      <div><span>Type de compte</span><strong>{{ data.user.role === 'admin' ? 'Administrateur' : 'Client' }}</strong>
+      <div><span>Type de compte</span><strong>{{
+          data.user.role === 'admin' ? 'Administrateur' : data.user.role === 'demo' ? 'Démonstration (lecture seule)' : 'Client'
+        }}</strong>
       </div>
-      <NuxtLink v-if="data.user.role==='admin'" to="/admin" :class="styles.cta">Ouvrir l’administration</NuxtLink>
+      <NuxtLink to="/mot-de-passe-oublie?source=profile" :class="profileStyles.passwordLink">Changer mon mot de passe
+      </NuxtLink>
+      <NuxtLink v-if="['admin','demo'].includes(data.user.role)" to="/admin" :class="styles.cta">Ouvrir
+        l’administration
+      </NuxtLink>
       <button @click="logout">Se déconnecter</button>
     </div>
   </main>

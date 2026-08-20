@@ -8,6 +8,8 @@ import {renderSeoTemplate} from '~/utils/seo-template';
 const productStyles = useCssModule('productStyles');
 const imageFor = useThemedImage();
 const route = useRoute();
+const {data: auth} = await useFetch<{user: {role: string} | null}>('/api/auth/me');
+const cartDisabled = computed(() => auth.value?.user?.role === 'demo');
 const {data: product, error} = await useFetch<Product>(`/api/products/${route.params.slug}`);
 const {data: stored} = await useFetch<Partial<SiteContent>>('/api/content', {default: () => ({})});
 const content = computed(() => ({...defaultSiteContent, ...stored.value}));
@@ -57,6 +59,7 @@ useHead(() => ({
 }))
 
 function addNow() {
+  if (cartDisabled.value) return;
   if (product.value) add(product.value);
   added.value = true
 }
@@ -80,7 +83,9 @@ function addNow() {
   width: 20px;
   height: 20px;
   flex: 0 0 auto
-}</style>
+}
+.addToCart:disabled { cursor:not-allowed; opacity:.55 }
+</style>
 <template>
   <main :class="productStyles.page">
     <StoreHeader :announcement="content.announcement" :payment-label="content.paymentLabel"
@@ -103,9 +108,9 @@ function addNow() {
           <li>Encres à base d’eau</li>
           <li>Expédition sous 3 à 5 jours ouvrés</li>
         </ul>
-        <button :class="[styles.cta,productStyles.addToCart]" @click="addNow">
+        <button :class="[styles.cta,productStyles.addToCart]" :disabled="cartDisabled" :title="cartDisabled ? 'Panier indisponible en mode démonstration' : undefined" @click="addNow">
           <img :src="cartIcon" alt="" aria-hidden="true">
-          <span>{{ added ? 'Ajouté au panier ✓' : 'Ajouter au panier' }}</span>
+          <span>{{ cartDisabled ? 'Panier indisponible en mode démo' : added ? 'Ajouté au panier ✓' : 'Ajouter au panier' }}</span>
         </button>
       </div>
     </div>

@@ -6,7 +6,7 @@ export default defineEventHandler(async event => {
         statusCode: 400,
         statusMessage: "Vous ne pouvez pas désactiver votre propre compte"
     });
-    if (!["admin", "customer"].includes(body.role)) throw createError({statusCode: 400});
+    if (!["admin", "customer", "demo"].includes(body.role)) throw createError({statusCode: 400});
     const db = database(event);
     await db.prepare("UPDATE users SET role=?,active=? WHERE id=?").bind(body.role, body.active ? 1 : 0, id).run();
     return {ok: true};

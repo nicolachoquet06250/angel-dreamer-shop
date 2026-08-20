@@ -52,15 +52,15 @@ describe('session JWT', () => {
         await expect(sessionUser({} as any)).resolves.toEqual(user)
     })
 
-  it('rejette une absence de cookie et un JWT altéré', async () => {
+    it('rejette une absence de cookie et un JWT altéré', async () => {
         vi.stubGlobal('getCookie', () => undefined)
         await expect(sessionUser({} as any)).resolves.toBeNull()
         vi.stubGlobal('getCookie', () => 'abc.def.signature-invalide')
         vi.stubGlobal('useRuntimeConfig', () => ({jwtSecret: 'secret'}))
-    await expect(sessionUser({} as any)).resolves.toBeNull()
-    vi.stubGlobal('getCookie', () => '%.%.%')
-    await expect(sessionUser({} as any)).resolves.toBeNull()
-  })
+        await expect(sessionUser({} as any)).resolves.toBeNull()
+        vi.stubGlobal('getCookie', () => '%.%.%')
+        await expect(sessionUser({} as any)).resolves.toBeNull()
+    })
 
     it('applique les droits utilisateur, le changement obligatoire et le rôle admin', async () => {
         vi.stubGlobal('createError', (value: unknown) => value)
@@ -83,6 +83,12 @@ describe('session JWT', () => {
         await expect(requireAdmin({} as any)).rejects.toMatchObject({statusCode: 403})
         currentUser = {id: 1, role: 'admin', must_change_password: 0}
         await expect(requireAdmin({} as any)).resolves.toMatchObject({role: 'admin'})
+        currentUser = {id: 2, role: 'demo', must_change_password: 0}
+        await expect(requireAdmin({method: 'GET'} as any)).resolves.toMatchObject({role: 'demo'})
+        await expect(requireAdmin({method: 'POST'} as any)).rejects.toMatchObject({
+            statusCode: 403,
+            statusMessage: expect.stringContaining('lecture seule')
+        })
     })
 
     it('supprime le cookie de session sur tout le site', () => {

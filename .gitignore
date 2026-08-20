@@ -27,6 +27,7 @@ npm-debug.log*
 next-env.d.ts
 /db/*.sqlite
 /db/*.sqlite3
+/db/*.sqlite-*
 
 .idea/
 .vscode/

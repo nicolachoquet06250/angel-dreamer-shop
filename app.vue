@@ -12,7 +12,10 @@ const isHome = computed(() => route.path === '/')
 useHead(() => ({
   htmlAttrs: {lang: data.value.seoLanguage || 'fr'},
   title: isHome.value ? data.value.seoTitle : undefined,
-  link: [{rel: 'canonical', href: `${baseUrl.value}${route.path === '/' ? '' : route.path}`}],
+  link: [
+    {rel: 'canonical', href: `${baseUrl.value}${route.path === '/' ? '' : route.path}`},
+    {rel: 'icon', href: `${baseUrl.value}/favicon.svg`}
+  ],
   meta: [
     {name: 'keywords', content: data.value.seoKeywords},
     {name: 'robots', content: data.value.seoRobots},

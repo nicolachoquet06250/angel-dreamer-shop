@@ -1,5 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import type {H3Event} from "h3";
+import nodemailer from 'nodemailer'
 
 beforeEach(() => {
     vi.stubGlobal('defineEventHandler', (handler: unknown) => handler)
@@ -142,7 +143,13 @@ describe('inscription', () => {
         vi.stubGlobal('setResponseStatus', status)
         const {default: handler} = await load.register()
 
-        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({user: {id: 8, email: 'ada@example.test', role: 'customer'}})
+        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({
+            user: {
+                id: 8,
+                email: 'ada@example.test',
+                role: 'customer'
+            }
+        })
         expect(run).toHaveBeenCalled()
         expect(signSession).toHaveBeenCalled()
         expect(status).toHaveBeenCalledWith({}, 201)
@@ -182,7 +189,15 @@ describe('compte utilisateur', () => {
             must_change_password: 0, created_at: 'date'
         })))
         await expect(module.default({} as H3Event<EventHandlerRequest>)).resolves.toEqual({
-            user: {id: 3, email: 'c@d.fr', firstName: 'Ada', lastName: '', role: 'customer', mustChangePassword: false, createdAt: 'date'}
+            user: {
+                id: 3,
+                email: 'c@d.fr',
+                firstName: 'Ada',
+                lastName: '',
+                role: 'customer',
+                mustChangePassword: false,
+                createdAt: 'date'
+            }
         })
     })
 
@@ -192,7 +207,12 @@ describe('compte utilisateur', () => {
         vi.stubGlobal('database', () => ({prepare: () => ({bind: (...args: unknown[]) => ({run: () => run(...args)})})}))
         vi.stubGlobal('readBody', async () => ({firstName: ' Ada ', lastName: ' Lovelace '}))
         const {default: handler} = await load.profile()
-        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({user: {firstName: 'Ada', lastName: 'Lovelace'}})
+        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({
+            user: {
+                firstName: 'Ada',
+                lastName: 'Lovelace'
+            }
+        })
         expect(run).toHaveBeenCalledWith('Ada', 'Lovelace', 5)
     })
 
@@ -242,9 +262,55 @@ describe('compte utilisateur', () => {
 
     it('détruit la session à la déconnexion', async () => {
         const clear = vi.fn()
+        vi.stubGlobal('sessionUser', async () => ({id: 1, role: 'customer'}))
         vi.stubGlobal('clearAuthSession', clear)
         const {default: handler} = await load.logout()
-        expect(handler({} as H3Event<EventHandlerRequest>)).toEqual({ok: true})
+        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({ok: true})
         expect(clear).toHaveBeenCalledWith({})
+    })
+
+    it('supprime un compte démo déconnecté et prévient son créateur', async () => {
+        const clear = vi.fn()
+        const deleted = vi.fn()
+        const send = vi.fn()
+        const account = {demo_email: 'demo@test.local', creator_email: 'admin@example.test'}
+        vi.stubGlobal('sessionUser', async () => ({id: 8, role: 'demo'}))
+        vi.stubGlobal('clearAuthSession', clear)
+        vi.stubGlobal('ready', vi.fn())
+        vi.stubGlobal('useRuntimeConfig', () => ({smtpHost: 'smtp.test', smtpUser: 'user', smtpPassword: 'secret', emailFrom: 'robot@test.local'}))
+        vi.spyOn(nodemailer, 'createTransport').mockReturnValue({sendMail: send} as never)
+        vi.stubGlobal('database', () => ({
+            prepare: (sql: string) => ({
+                bind: (...args: unknown[]) => ({
+                    first: async () => sql.includes('SELECT demo.email') ? account : null,
+                    run: async () => deleted(sql, ...args)
+                })
+            })
+        }))
+        const event = {} as H3Event<EventHandlerRequest>
+        const {default: handler} = await load.logout()
+        await expect(handler(event)).resolves.toEqual({ok: true})
+        expect(clear).toHaveBeenCalledWith(event)
+        expect(deleted).toHaveBeenCalledWith("DELETE FROM users WHERE id=? AND role='demo'", 8)
+        expect(send).toHaveBeenCalledWith(expect.objectContaining({
+            to: account.creator_email,
+            subject: 'Fin d’utilisation du compte de démonstration'
+        }))
+    })
+
+    it('termine la déconnexion démo même si la notification échoue', async () => {
+        vi.stubGlobal('sessionUser', async () => ({id: 8, role: 'demo'}))
+        vi.stubGlobal('clearAuthSession', vi.fn())
+        vi.stubGlobal('ready', vi.fn())
+        vi.stubGlobal('useRuntimeConfig', () => ({smtpHost: 'smtp.test', smtpUser: 'user', smtpPassword: 'secret', emailFrom: 'robot@test.local'}))
+        vi.spyOn(nodemailer, 'createTransport').mockReturnValue({sendMail: async () => { throw new Error('SMTP indisponible') }} as never)
+        vi.stubGlobal('database', () => ({prepare: (sql: string) => ({bind: () => ({
+            first: async () => sql.includes('SELECT demo.email') ? {demo_email: 'demo@test.local', creator_email: 'admin@example.test'} : null,
+            run: async () => ({success: true})
+        })})}))
+        vi.spyOn(console, 'error').mockImplementation(() => undefined)
+        const {default: handler} = await load.logout()
+        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({ok: true})
+        expect(console.error).toHaveBeenCalled()
     })
 })

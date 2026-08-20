@@ -186,7 +186,9 @@
 
 .miniValues span {
     padding: 9px 3px;
-    border-right: 1px solid #ccc
+    &:not(&:last-of-type) {
+        border-right: 1px solid #ccc
+    }
 }
 
 .miniSectionTitle {

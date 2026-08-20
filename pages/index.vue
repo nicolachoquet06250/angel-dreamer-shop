@@ -7,6 +7,8 @@ import catalog from '~/assets/css/catalog.module.css'
 
 const managed = useCssModule('managed')
 const imageFor = useThemedImage();
+const {data: auth} = await useFetch<{user: {role: string} | null}>('/api/auth/me');
+const cartDisabled = computed(() => auth.value?.user?.role === 'demo');
 const {data: allProducts} = await useFetch<Product[]>('/api/products', {default: () => []});
 const products = computed(() => allProducts.value.filter(product => product.featured).slice(0, 4));
 const {data: universes} = await useFetch<Universe[]>('/api/universes', {default: () => []});
@@ -26,24 +28,24 @@ const content = computed(() => ({...defaultSiteContent, ...stored.value}))
       </div>
       <div :class="[styles.heroImage,managed.hero]">
         <img v-if="imageFor(content.heroImage)"
-           :src="imageFor(content.heroImage)?.content + `?size=${imageFor(content.heroImage)?.width}x${imageFor(content.heroImage)?.height}`"
-           alt=""
-           fetchpriority="high" loading="eager" decoding="async">
+             :src="imageFor(content.heroImage)?.content + `?size=${imageFor(content.heroImage)?.width}x${imageFor(content.heroImage)?.height}`"
+             alt=""
+             fetchpriority="high" loading="eager" decoding="async">
       </div>
     </section>
     <section :class="styles.values"><span :class="engagementStyles.publicItem">
       <img v-if="imageFor(content.value1Image)"
-          :src="imageFor(content.value1Image)?.content + `?size=${imageFor(content.value1Image)?.width}x${imageFor(content.value1Image)?.height}`"
-          alt=""><b>{{ content.value1 }}</b></span><span
+           :src="imageFor(content.value1Image)?.content + `?size=${imageFor(content.value1Image)?.width}x${imageFor(content.value1Image)?.height}`"
+           alt=""><b>{{ content.value1 }}</b></span><span
         :class="engagementStyles.publicItem">
       <img v-if="imageFor(content.value2Image)"
-          :src="imageFor(content.value2Image)?.content + `?size=${imageFor(content.value2Image)?.width}x${imageFor(content.value2Image)?.height}`"
-          alt="">
+           :src="imageFor(content.value2Image)?.content + `?size=${imageFor(content.value2Image)?.width}x${imageFor(content.value2Image)?.height}`"
+           alt="">
       <b>{{ content.value2 }}</b></span><span
         :class="engagementStyles.publicItem">
       <img v-if="imageFor(content.value3Image)"
-          :src="imageFor(content.value3Image)?.content + `?size=${imageFor(content.value3Image)?.width}x${imageFor(content.value3Image)?.height}`"
-          alt="">
+           :src="imageFor(content.value3Image)?.content + `?size=${imageFor(content.value3Image)?.width}x${imageFor(content.value3Image)?.height}`"
+           alt="">
       <b>{{ content.value3 }}</b></span></section>
     <div :class="styles.container">
       <section id="univers">
@@ -60,7 +62,7 @@ const content = computed(() => ({...defaultSiteContent, ...stored.value}))
         <div :class="styles.sectionTitle"><small>{{ content.favoritesEyebrow }}</small>
           <h2>{{ content.favoritesTitle }}</h2></div>
         <div :class="styles.productGrid">
-          <ProductCard v-for="product in products" :key="product.id" :product="product"/>
+          <ProductCard v-for="product in products" :key="product.id" :product="product" :cart-disabled="cartDisabled"/>
         </div>
       </section>
       <section :class="styles.workshop">

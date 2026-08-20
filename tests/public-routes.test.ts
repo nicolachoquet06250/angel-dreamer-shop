@@ -116,8 +116,18 @@ describe('catalogue public', () => {
         vi.stubGlobal('sessionUser', async () => ({email: 'admin@example.test', role: 'admin'}))
         // @ts-ignore
         const {default: handler} = await import('~/server/api/admin/me.get.ts')
-        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({email: 'admin@example.test', allowed: true})
+        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({
+            email: 'admin@example.test',
+            role: 'admin',
+            allowed: true,
+            readOnly: false
+        })
         vi.stubGlobal('sessionUser', async () => null)
-        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({email: '', allowed: false})
+        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({
+            email: '',
+            role: '',
+            allowed: false,
+            readOnly: false
+        })
     })
 })

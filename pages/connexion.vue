@@ -67,6 +67,9 @@ async function submit() {
               required
           >
         </label>
+        <p>
+          <NuxtLink to="/mot-de-passe-oublie">Mot de passe oublié ?</NuxtLink>
+        </p>
         <button type="submit">
           {{ loading ? 'Connexion…' : 'Se connecter' }}
         </button>
