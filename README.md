@@ -37,7 +37,6 @@ Le workflow `.github/workflows/test-build-deploy.yml` nécessite les secrets sui
 - `ALWAYSDATA_SSH_PORT`
 - `ALWAYSDATA_SSH_USER`
 - `ALWAYSDATA_SSH_PASSWORD`
-- `ALWAYSDATA_SSH_FINGERPRINT` : empreinte SHA256 officielle de la clé du serveur SSH
 - `ALWAYSDATA_DEPLOY_PATH` : chemin absolu du projet sur le serveur
 - `ALWAYSDATA_API_KEY`
 - `ALWAYSDATA_ACCOUNT`

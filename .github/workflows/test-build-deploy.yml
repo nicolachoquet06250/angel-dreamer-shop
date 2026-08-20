@@ -3,6 +3,11 @@ name: Tests, coverage and production deployment
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - README.md
+      - AGENTS.md
+      - .junie/guidelines.md
+      - .env.example
   workflow_dispatch:
 
 permissions:
@@ -170,7 +175,6 @@ jobs:
           port: ${{ secrets.ALWAYSDATA_SSH_PORT }}
           username: ${{ secrets.ALWAYSDATA_SSH_USER }}
           password: ${{ secrets.ALWAYSDATA_SSH_PASSWORD }}
-          fingerprint: ${{ secrets.ALWAYSDATA_SSH_FINGERPRINT }}
           script: |
             cd "${{ secrets.ALWAYSDATA_DEPLOY_PATH }}"
             test -f package-lock.json || { echo "package-lock.json absent du déploiement" >&2; exit 1; }
