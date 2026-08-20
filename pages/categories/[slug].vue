@@ -3,6 +3,7 @@ import type {Category, Product, SiteContent} from '~/types/shop';
 import {defaultSiteContent} from '~/types/shop';
 import styles from '~/assets/css/site.module.css';
 import catalog from '~/assets/css/catalog.module.css';
+import {renderSeoTemplate} from '~/utils/seo-template';
 
 const route = useRoute();
 const {data: categories} = await useFetch<Category[]>('/api/categories', {default: () => []});
@@ -14,6 +15,25 @@ const {data: products} = await useFetch<Product[]>('/api/products', {
 });
 const {data: storedContent} = await useFetch<Partial<SiteContent>>('/api/content', {default: () => ({})});
 const content = computed(() => ({...defaultSiteContent, ...storedContent.value}))
+const origin = (useRuntimeConfig().public.siteUrl || useRequestURL().origin).replace(/\/$/, '')
+const socialImage = computed(() => content.value.seoOgImage
+    ? `${origin}${content.value.seoOgImage.content}?size=1200x630`
+    : `${origin}/og.png`)
+const seoValues = computed(() => ({
+  ['Nom de la catégorie']: category.value?.label,
+  'Nom du site': content.value.seoSiteName
+}))
+useSeoMeta({
+  title: () => renderSeoTemplate(content.value.seoCategoryTitle, seoValues.value),
+  description: () => renderSeoTemplate(content.value.seoCategoryDescription, seoValues.value),
+  ogType: 'website',
+  ogTitle: () => renderSeoTemplate(content.value.seoCategoryOgTitle, seoValues.value),
+  ogDescription: () => renderSeoTemplate(content.value.seoCategoryOgDescription, seoValues.value),
+  ogImage: socialImage,
+  twitterTitle: () => renderSeoTemplate(content.value.seoCategoryOgTitle, seoValues.value),
+  twitterDescription: () => renderSeoTemplate(content.value.seoCategoryOgDescription, seoValues.value),
+  twitterImage: socialImage
+})
 </script>
 <template>
   <main>

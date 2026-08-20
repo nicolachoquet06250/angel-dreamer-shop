@@ -50,14 +50,14 @@ jobs:
         run: |
           set -euo pipefail
           archive="$(mktemp -d)/coverage.tar"
-          tar -cf "$archive" coverage
+          tar -C coverage -cf "$archive" .
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout --orphan test-coverage
           git rm -rf .
           tar -xf "$archive"
-          touch coverage/.nojekyll
-          git add coverage
+          touch .nojekyll
+          git add --all
           git commit -m "Coverage for ${GITHUB_SHA}"
           git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:test-coverage
 
@@ -104,9 +104,29 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  migrate:
+    name: Make migrations
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Make migrations
+        run: npm run db:migrate
+
   deploy:
     name: Deploy to Alwaysdata
-    needs: build
+    needs: migrate
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: production

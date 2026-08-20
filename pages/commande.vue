@@ -1,6 +1,7 @@
 <script setup lang="ts">import styles from '~/assets/css/site.module.css';
 
-const route = useRoute()</script>
+const route = useRoute();
+</script>
 <template>
   <main>
     <StoreHeader/>

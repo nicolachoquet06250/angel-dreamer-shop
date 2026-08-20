@@ -3,6 +3,7 @@ import type {Product, SiteContent} from '~/types/shop';
 import {defaultSiteContent} from '~/types/shop';
 import cartIcon from '~/assets/icons/shopping-cart-white.png';
 import styles from '~/assets/css/site.module.css';
+import {renderSeoTemplate} from '~/utils/seo-template';
 
 const productStyles = useCssModule('productStyles');
 const imageFor = useThemedImage();
@@ -13,6 +14,47 @@ const content = computed(() => ({...defaultSiteContent, ...stored.value}));
 if (error.value) throw createError({statusCode: 404, statusMessage: 'Produit introuvable'});
 const {add} = useShopCart();
 const added = ref(false);
+const origin = (useRuntimeConfig().public.siteUrl || useRequestURL().origin).replace(/\/$/, '');
+const productImage = computed(() => product.value?.image ? `${origin}${product.value.image.content}?size=1200x630` : undefined)
+const configuredProductImage = computed(() => {
+  const image = content.value.seoProductOgImage
+  return image ? `${origin}${image.content}?size=1200x630` : undefined
+})
+const socialImage = computed(() => content.value.seoProductImageMode === 'library'
+    ? (configuredProductImage.value || productImage.value)
+    : productImage.value)
+const seoValues = computed(() => ({
+  'Nom du produit': product.value?.name, 'Description du produit': product.value?.description,
+  'Prix': product.value ? `${(product.value.priceCents / 100).toFixed(2).replace('.', ',')} €` : '',
+  ['Catégories']: product.value?.categories.map(item => item.label).join(', '),
+  'Univers': product.value?.universes.map(item => item.title).join(', '), 'Nom du site': content.value.seoSiteName
+}))
+useSeoMeta({
+  title: () => renderSeoTemplate(content.value.seoProductTitle, seoValues.value),
+  description: () => renderSeoTemplate(content.value.seoProductDescription, seoValues.value),
+  ogType: 'article',
+  ogTitle: () => renderSeoTemplate(content.value.seoProductOgTitle, seoValues.value),
+  ogDescription: () => renderSeoTemplate(content.value.seoProductOgDescription, seoValues.value),
+  ogImage: socialImage,
+  twitterTitle: () => renderSeoTemplate(content.value.seoProductOgTitle, seoValues.value),
+  twitterDescription: () => renderSeoTemplate(content.value.seoProductOgDescription, seoValues.value),
+  twitterImage: socialImage
+})
+useHead(() => ({
+  script: product.value ? [{
+    type: 'application/ld+json', children: JSON.stringify({
+      '@context': 'https://schema.org', '@type': 'Product', name: product.value.name,
+      description: product.value.description, image: productImage.value,
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'EUR',
+        price: (product.value.priceCents / 100).toFixed(2),
+        availability: 'https://schema.org/InStock',
+        url: `${origin}/produits/${product.value.slug}`
+      }
+    })
+  }] : []
+}))
 
 function addNow() {
   if (product.value) add(product.value);

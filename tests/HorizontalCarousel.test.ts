@@ -91,4 +91,21 @@ describe('carrousel horizontal', () => {
         await fireEvent(track, new Event('scrollend'))
         expect(track).toHaveAttribute('role', 'tablist')
     })
+
+    it('centre au chargement l’onglet actif lorsque la barre déborde', async () => {
+        render(HorizontalCarousel, {
+            props: {label: "les onglets d’administration"},
+            slots: {default: '<button>A</button><button aria-selected="true">B</button><button>C</button>'}
+        })
+        const track = screen.getByText('A').parentElement!
+        dimensions(track, {scrollWidth: 600, clientWidth: 200, scrollLeft: 0})
+        Object.defineProperty(track.children[1], 'offsetLeft', {value: 220})
+        Object.defineProperty(track.children[1], 'offsetWidth', {value: 80})
+        track.scrollTo = vi.fn()
+        resize([], {} as ResizeObserver)
+        await nextTick()
+        await nextTick()
+        expect(track.scrollTo).toHaveBeenCalledWith({left: 160, behavior: 'auto'})
+        expect(screen.getByRole('button', {name: /gauche/})).toBeVisible()
+    })
 })

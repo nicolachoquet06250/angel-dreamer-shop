@@ -53,7 +53,7 @@ function move(index: number, direction: number) {
   const target = index + direction;
   if (target < 0 || target >= universes.value?.length) return;
   const [item] = universes.value.splice(index, 1);
-  universes.value.splice(target, 0, item)
+  universes.value.splice(target, 0, item as Universe)
 }
 
 function addCategory() {
@@ -74,7 +74,7 @@ function moveCategory(index: number, direction: number) {
   const target = index + direction;
   if (target < 0 || target >= categories.value.length) return;
   const [item] = categories.value.splice(index, 1);
-  categories.value.splice(target, 0, item)
+  categories.value.splice(target, 0, item as Category)
 }
 
 function openPicker(index: number | null = null) {
@@ -458,7 +458,7 @@ function scaled(image: Universe['image']) {
         <details :open="index === 0">
           <summary>{{ group.title }}<span>{{ group.fields?.length }} champs</span></summary>
           <div :class="styles.fields"><label v-for="field in group.fields" :key="field[0]">{{ field[1] }}<textarea
-              v-if="field[0] === 'heroTitle' || field[0] === 'heroSubtitle' || field[0] === 'workshopText'"
+              v-if="field[0] === 'heroTitle' || field[0] === 'heroSubtitle' || (field[0] as unknown as 'workshopText') === 'workshopText'"
               v-model="model[field[0]]" rows="3" maxlength="500"/><input v-else v-model="model[field[0]]"
                                                                          maxlength="500"></label></div>
           <div v-if="group.title === 'Bannière principale'" :class="styles.images">
@@ -529,8 +529,8 @@ function scaled(image: Universe['image']) {
         <div :class="pickerStyles.selection">
           <article v-for="(product,index) in selectedProducts" :key="product.id">
             <img v-if="imageFor(product.image)"
-              :src="imageFor(product.image)?.content + `?size=${imageFor(product.image)?.width}x${imageFor(product.image)?.height}`"
-              :alt="product.name">
+                 :src="imageFor(product.image)?.content + `?size=${imageFor(product.image)?.width}x${imageFor(product.image)?.height}`"
+                 :alt="product.name">
             <div><strong>{{ product.name }}</strong><small>{{ (product.priceCents / 100).toFixed(2).replace('.', ',') }}
               €</small></div>
             <button type="button" @click="openPicker(index)">Modifier</button>
@@ -572,14 +572,14 @@ function scaled(image: Universe['image']) {
       <div :class="styles.miniValues">
         <span :class="[engagementStyles.publicItem,engagementPreview.item]">
           <img v-if="previewImage(model.value1Image)"
-             :src="previewImage(model.value1Image)?.content + `?size=${previewImage(model.value1Image)?.width}x${previewImage(model.value1Image)?.height}`"
-             alt="">
+               :src="previewImage(model.value1Image)?.content + `?size=${previewImage(model.value1Image)?.width}x${previewImage(model.value1Image)?.height}`"
+               alt="">
           <b>{{ model.value1 }}</b></span><span
           :class="[engagementStyles.publicItem,engagementPreview.item]">
         <img v-if="previewImage(model.value2Image)"
-           :src="previewImage(model.value2Image)?.content + `?size=${previewImage(model.value2Image)?.width}x${previewImage(model.value2Image)?.height}`"
-           alt="">
-        <b>{{model.value2}}</b></span><span :class="[engagementStyles.publicItem,engagementPreview.item]"><img
+             :src="previewImage(model.value2Image)?.content + `?size=${previewImage(model.value2Image)?.width}x${previewImage(model.value2Image)?.height}`"
+             alt="">
+        <b>{{ model.value2 }}</b></span><span :class="[engagementStyles.publicItem,engagementPreview.item]"><img
           v-if="previewImage(model.value3Image)" :src="previewImage(model.value3Image)?.content"
           alt=""><b>{{ model.value3 }}</b></span></div>
       <div :class="styles.miniSectionTitle"><small>{{ model.universesEyebrow }}</small>
@@ -636,7 +636,9 @@ function scaled(image: Universe['image']) {
             <div><small>FAVORIS DU MOMENT</small>
               <h2>{{ replaceIndex === null ? 'Sélectionner les produits' : 'Choisir un produit de remplacement' }}</h2>
               <p>
-                {{ replaceIndex === null ? 'Vous pouvez retenir jusqu’à quatre articles.' : 'Le produit choisi remplacera le favori actuel.' }}</p>
+                {{
+                  replaceIndex === null ? 'Vous pouvez retenir jusqu’à quatre articles.' : 'Le produit choisi remplacera le favori actuel.'
+                }}</p>
             </div>
             <button type="button" aria-label="Fermer" @click="pickerOpen=false">×</button>
           </header>
@@ -646,8 +648,12 @@ function scaled(image: Universe['image']) {
                     :disabled="replaceIndex!==null&&favoriteIds.some((id,index)=>id===product.id&&index!==replaceIndex)"
                     @click="pickProduct(product.id)">
               <img v-if="imageFor(product.image)"
-                  :src="imageFor(product.image)?.content + `?size=${imageFor(product.image)?.width}x${imageFor(product.image)?.height}`"
-                  :alt="product.name"><span><strong>{{ product.name }}</strong><small>{{ (product.priceCents / 100).toFixed(2).replace('.', ',') }} €</small></span><b>{{ favoriteIds.includes(product.id) ? '✓' : '+' }}</b>
+                   :src="imageFor(product.image)?.content + `?size=${imageFor(product.image)?.width}x${imageFor(product.image)?.height}`"
+                   :alt="product.name"><span><strong>{{
+                product.name
+              }}</strong><small>{{
+                (product.priceCents / 100).toFixed(2).replace('.', ',')
+              }} €</small></span><b>{{ favoriteIds.includes(product.id) ? '✓' : '+' }}</b>
             </button>
           </div>
           <footer><span>{{ favoriteIds.length }} / 4 sélectionnés</span>

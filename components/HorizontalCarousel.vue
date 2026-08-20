@@ -7,12 +7,30 @@ const canPrev = computed(() => overflow.value && index.value > 0);
 const canNext = computed(() => overflow.value && index.value < (track.value?.children.length || 0) - 1);
 const compact = computed(() => props.label.includes('onglets'));
 let observer: ResizeObserver | undefined
+let initialActiveCentered = false
+
+function centerInitialActive() {
+  const el = track.value;
+  if (!el || !overflow.value || !compact.value || initialActiveCentered) return;
+  const active = el.querySelector<HTMLElement>('[aria-selected="true"]');
+  if (!active) return;
+  const activeIndex = Array.from(el.children).indexOf(active);
+  if (activeIndex < 0) return;
+  const target = Math.max(0, Math.min(
+      el.scrollWidth - el.clientWidth,
+      active.offsetLeft - (el.clientWidth - active.offsetWidth) / 2
+  ));
+  index.value = activeIndex;
+  initialActiveCentered = true;
+  el.scrollTo({left: target, behavior: 'auto'})
+}
 
 function updateOverflow() {
   const el = track.value;
   if (!el) return;
   overflow.value = el.scrollWidth > el.clientWidth + 2;
   if (!overflow.value) index.value = 0
+  else nextTick(centerInitialActive)
 }
 
 function updateIndex() {

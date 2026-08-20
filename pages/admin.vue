@@ -5,14 +5,14 @@ import styles from '~/assets/css/site.module.css';
 
 const actionStyles = useCssModule('actionStyles')
 type UserRow = { id: number; email: string; role: 'admin' | 'customer'; active: boolean; createdAt: string };
-type AdminTab = 'content' | 'category' | 'universe' | 'products' | 'users'
+type AdminTab = 'content' | 'category' | 'universe' | 'seo' | 'products' | 'users'
 const previewDark = ref(false)
 const categoryPreviewDark = ref(false)
 const universePreviewDark = ref(false)
 const route = useRoute();
 const router = useRouter();
 const requested = String(route.params.tab || route.query.tab || 'content');
-const activeTab = ref<AdminTab>(['content', 'category', 'universe', 'products', 'users'].includes(requested) ? requested as AdminTab : 'content');
+const activeTab = ref<AdminTab>(['content', 'category', 'universe', 'seo', 'products', 'users'].includes(requested) ? requested as AdminTab : 'content');
 if (route.query.tab) await navigateTo(`/admin/${activeTab.value}`, {replace: true});
 const {data: me} = await useFetch<{ email: string; allowed: boolean }>('/api/admin/me');
 const products = ref<Product[]>([]);
@@ -24,6 +24,9 @@ const tabs = computed(() => [{id: 'content' as const, label: 'Page d’accueil'}
   id: 'category' as const,
   label: 'Page Catégorie'
 }, {id: 'universe' as const, label: 'Page univers'}, {
+  id: 'seo' as const,
+  label: 'Référencement'
+}, {
   id: 'products' as const,
   label: 'Produits',
   count: products.value.length
@@ -69,9 +72,9 @@ async function selectTab(tab: AdminTab) {
 
 async function load() {
   if (!me.value?.allowed) return;
-  products.value = await $fetch('/api/admin/products');
+  products.value = await $fetch<Product[]>('/api/admin/products');
   favoriteIds.value = products.value.filter(product => product.featured).sort((a, b) => (a.featuredPosition ?? 99) - (b.featuredPosition ?? 99)).slice(0, 4).map(product => product.id);
-  users.value = await $fetch('/api/admin/users');
+  users.value = await $fetch<UserRow[]>('/api/admin/users');
   universes.value = await $fetch('/api/admin/universes');
   categories.value = await $fetch('/api/admin/categories');
   Object.assign(content, defaultSiteContent, await $fetch('/api/content'))
@@ -86,6 +89,7 @@ async function saveContent() {
     categories.value = await $fetch('/api/admin/categories', {method: 'PUT', body: categories.value});
     universes.value = await $fetch('/api/admin/universes', {method: 'PUT', body: universes.value});
     await $fetch('/api/admin/featured', {method: 'PUT', body: {productIds: favoriteIds.value}});
+    await refreshNuxtData();
     products.value = await $fetch('/api/admin/products');
     message.value = 'Contenu, navigation, univers et favoris enregistrés'
   } finally {
@@ -137,6 +141,16 @@ async function saveUniversePage() {
   try {
     await $fetch('/api/admin/content', {method: 'PUT', body: content});
     message.value = 'Page univers enregistrée'
+  } finally {
+    saving.value = ''
+  }
+}
+
+async function saveSeo() {
+  saving.value = 'seo';
+  try {
+    await $fetch('/api/admin/content', {method: 'PUT', body: content});
+    message.value = 'Référencement enregistré'
   } finally {
     saving.value = ''
   }
@@ -276,6 +290,25 @@ async function saveUniversePage() {
             </button>
           </div>
         </section>
+        <section v-else-if="activeTab==='seo'" id="panel-seo" :class="styles.adminPanel" role="tabpanel"
+                 aria-labelledby="tab-seo">
+          <div :class="styles.panelTitle">
+            <div><small>VISIBILITÉ ET PARTAGE</small>
+              <h2>Référencement</h2>
+              <p>Configurez les moteurs de recherche, les aperçus sociaux et les données structurées du site.</p></div>
+            <div :class="actionStyles.actions">
+              <button type="button" :disabled="saving==='seo'" @click="saveSeo">
+                {{ saving === 'seo' ? 'Enregistrement…' : 'Enregistrer le référencement' }}
+              </button>
+            </div>
+          </div>
+          <SeoEditor v-model="content"/>
+          <div :class="actionStyles.bottomSave">
+            <button type="button" :disabled="saving==='seo'" @click="saveSeo">
+              {{ saving === 'seo' ? 'Enregistrement…' : 'Enregistrer le référencement' }}
+            </button>
+          </div>
+        </section>
         <section v-else-if="activeTab==='products'" id="panel-products" :class="styles.adminPanel" role="tabpanel"
                  aria-labelledby="tab-products">
           <div :class="styles.panelTitle">
@@ -289,7 +322,7 @@ async function saveUniversePage() {
               <img v-if="p.image"
                    :src="p.image.content + `?size=${p.image.width}x${p.image?.height}`"
                    :alt="p.name"
-                  :width="p.image.width"
+                   :width="p.image.width"
                    :height="p.image.height">
               <div><h3>{{ p.name }}</h3>
                 <span>{{ (p.priceCents / 100).toFixed(2) }} € · {{ p.active ? 'En ligne' : 'Masqué' }}</span></div>
@@ -319,18 +352,18 @@ async function saveUniversePage() {
     <div v-if="draft" :class="styles.modal" @click.self="draft=null">
       <form :class="styles.editor" @submit.prevent="saveProduct">
         <button type="button" aria-label="Fermer" @click="draft=null">×</button>
-        <h2>{{ draft.id ? 'Modifier' : 'Créer' }} un produit</h2><label>Nom<input v-model="draft.name" required></label><label>Adresse
-        de la page<input v-model="draft.slug" required></label><label>Catégories<select v-model="draft.categoryIds"
+        <h2>{{ draft.id ? 'Modifier' : 'Créer' }} un produit</h2><label>Nom<input v-model="draft!.name" required></label><label>Adresse
+        de la page<input v-model="draft!.slug" required></label><label>Catégories<select v-model="draft!.categoryIds"
                                                                                         multiple required>
         <option v-for="category in categories" :key="category.id" :value="category.id">{{ category.label }}</option>
       </select><small>Maintenez Ctrl ou Cmd pour sélectionner plusieurs catégories.</small></label><label>Univers<select
-          v-model="draft.universeIds" multiple required>
+          v-model="draft!.universeIds" multiple required>
         <option v-for="universe in universes" :key="universe.id" :value="universe.id">{{ universe.title }}</option>
       </select><small>Maintenez Ctrl ou Cmd pour sélectionner plusieurs univers.</small></label><label>Prix en
-        centimes<input v-model.number="draft.priceCents" type="number" min="1" required></label>
-        <ImageUpload v-model="draft.image" label="Image du produit" required/>
-        <label>Description<textarea v-model="draft.description" rows="5" required/></label>
-        <div :class="styles.checks"><label><input v-model="draft.active" type="checkbox"> En ligne</label></div>
+        centimes<input v-model.number="draft!.priceCents" type="number" min="1" required></label>
+        <ImageUpload v-model="draft!.image" label="Image du produit" required/>
+        <label>Description<textarea v-model="draft!.description" rows="5" required/></label>
+        <div :class="styles.checks"><label><input v-model="draft!.active" type="checkbox"> En ligne</label></div>
         <button type="submit">{{ saving === 'product' ? 'Enregistrement…' : 'Enregistrer le produit' }}</button>
       </form>
     </div>

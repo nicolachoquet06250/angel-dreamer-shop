@@ -30,22 +30,7 @@ export default defineNuxtConfig({
     },
     app: {
         head: {
-            htmlAttrs: {lang: "fr"},
-            title: "Angel Dreamer — Objets imprimés en France",
-            meta: [
-                {
-                    name: "description",
-                    content: "Objets physiques originaux, imprimés à la demande en France."
-                },
-                {
-                    property: "og:image",
-                    content: "/og.png"
-                },
-                {
-                    name: "twitter:card",
-                    content: "summary_large_image"
-                }
-            ]
+            htmlAttrs: {lang: "fr"}
         }
     },
     runtimeConfig: {
