@@ -11,10 +11,11 @@ export default defineEventHandler(async event => {
     const db = database(event);
     await ready(db);
     const textEntries = Object.entries(body).filter(([key]) => allowed.has(key) && !imageContentKeys.includes(key as any)).map(([key, value]) => [key, String(value ?? '')] as const);
-    for (const [key, value] of textEntries) if (value.length > 500) throw createError({
-        statusCode: 400,
-        statusMessage: `Texte trop long : ${key}`
-    });
+    const longTextKeys = new Set(['cguContent', 'cgvContent']);
+    for (const [key, value] of textEntries) {
+        const max = longTextKeys.has(key) ? 200_000 : 500;
+        if (value.length > max) throw createError({statusCode: 400, statusMessage: `Texte trop long : ${key}`});
+    }
     await db.batch(textEntries.map(([key, value]) => db.prepare('INSERT INTO site_content(`key`,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').bind(key, value)));
     for (const key of imageContentKeys) {
         const imageId = await persistImage(db, body[key] as ImageAsset | null);

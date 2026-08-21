@@ -1,4 +1,4 @@
-import {sendDemoAccountEnded} from "~/server/utils/mailer";
+import {sendDemoAccountEnded} from "#server/utils/mailer";
 
 export default defineEventHandler(async event => {
     const user = await sessionUser(event)

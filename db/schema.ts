@@ -1,10 +1,4 @@
-import {
-    type AnySQLiteColumn,
-    index,
-    integer,
-    sqliteTable,
-    text
-} from 'drizzle-orm/sqlite-core'
+import {type AnySQLiteColumn, index, integer, sqliteTable, text} from 'drizzle-orm/sqlite-core'
 
 export const images = sqliteTable('images', {
     id: integer('id').primaryKey({autoIncrement: true}),
@@ -98,4 +92,42 @@ export const orders = sqliteTable('orders', {
     status: text('status').notNull(),
     customerEmail: text('customer_email'),
     createdAt: text('created_at').notNull()
+})
+
+export const discounts = sqliteTable('discounts', {
+    id: integer('id').primaryKey({autoIncrement: true}),
+    label: text('label').notNull(),
+    type: text('type').notNull(), // 'percent' | 'fixed'
+    value: integer('value').notNull(), // percent (0-100) or cents
+    active: integer('active', {mode: 'boolean'}).notNull().default(true),
+    startsAt: text('starts_at'),
+    endsAt: text('ends_at'),
+    createdAt: text('created_at').notNull()
+})
+
+// Each rule targets one scope: product, category or universe
+export const discountRules = sqliteTable('discount_rules', {
+    id: integer('id').primaryKey({autoIncrement: true}),
+    discountId: integer('discount_id').notNull().references(() => discounts.id, {onDelete: 'cascade'}),
+    scope: text('scope').notNull(), // 'product' | 'category' | 'universe'
+    targetId: integer('target_id').notNull()
+})
+
+export const promoCodes = sqliteTable('promo_codes', {
+    id: integer('id').primaryKey({autoIncrement: true}),
+    code: text('code').notNull().unique(),
+    active: integer('active', {mode: 'boolean'}).notNull().default(true),
+    startsAt: text('starts_at'),
+    endsAt: text('ends_at'),
+    createdAt: text('created_at').notNull()
+})
+
+// Each rule targets one scope with its own discount type/value
+export const promoCodeRules = sqliteTable('promo_code_rules', {
+    id: integer('id').primaryKey({autoIncrement: true}),
+    promoCodeId: integer('promo_code_id').notNull().references(() => promoCodes.id, {onDelete: 'cascade'}),
+    scope: text('scope').notNull(), // 'product' | 'category' | 'universe' | 'all'
+    targetId: integer('target_id'), // null when scope='all'
+    type: text('type').notNull(), // 'percent' | 'fixed'
+    value: integer('value').notNull() // percent (0-100) or cents
 })

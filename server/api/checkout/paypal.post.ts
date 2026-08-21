@@ -7,7 +7,9 @@ export default defineEventHandler(async event => {
         statusCode: 503,
         statusMessage: "PayPal n’est pas encore configuré"
     });
-    const lines = await checkoutLines(event, (await readBody(event)).lines || []);
+    const body = await readBody(event);
+    const {lines, promoError} = await checkoutLines(event, body.lines || [], body.promoCode);
+    if (promoError) throw createError({statusCode: 400, statusMessage: promoError});
     const total = lines.reduce((s, l) => s + l.price * l.quantity, 0);
     const origin = config.public.siteUrl || getRequestURL(event).origin;
     const token = await paypalToken(clientId, config.paypalClientSecret);

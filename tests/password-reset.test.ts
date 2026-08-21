@@ -1,6 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 import type {H3Event} from 'h3'
-import {createResetToken, createSecurityCode, hashSecurityCode, safeEqual} from '~/server/utils/password-reset'
+import {createResetToken, createSecurityCode, hashSecurityCode, safeEqual} from '#server/utils/password-reset'
 
 beforeEach(() => {
     vi.stubGlobal('defineEventHandler', (handler: unknown) => handler)
@@ -40,7 +40,7 @@ describe('demande de code', () => {
         vi.stubGlobal('readBody', async () => ({email: 'invalide'}));
         vi.stubGlobal('sessionUser', async () => null)
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/auth/password-code/request.post.ts')
+        const {default: handler} = await import('#server/api/auth/password-code/request.post.ts')
         await expect(handler({} as H3Event)).resolves.toMatchObject({message: expect.any(String)})
     })
     it('crée un code haché, invalide le précédent et envoie le mail', async () => {
@@ -65,7 +65,7 @@ describe('demande de code', () => {
         const send = vi.fn();
         vi.stubGlobal('sendPasswordCode', send)
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/auth/password-code/request.post.ts')
+        const {default: handler} = await import('#server/api/auth/password-code/request.post.ts')
         await handler({} as H3Event)
         expect(send).toHaveBeenCalledWith({}, 'ada@example.test', '123456')
         expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO password_reset_codes'))
@@ -88,7 +88,7 @@ describe('demande de code', () => {
         const send = vi.fn()
         vi.stubGlobal('sendPasswordCode', send)
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/auth/password-code/request.post.ts')
+        const {default: handler} = await import('#server/api/auth/password-code/request.post.ts')
         await handler({} as H3Event)
         expect(send).toHaveBeenCalledWith({}, 'session@example.test', '123456')
         expect(db.prepare).not.toHaveBeenCalledWith(expect.stringContaining('WHERE email=?'))
@@ -99,7 +99,7 @@ describe('demande de code', () => {
         const database = (user: any, latest?: any) => ({prepare: (sql: string) => ({bind: () => ({first: async () => sql.startsWith('SELECT id,email') ? user : latest})})})
         vi.stubGlobal('database', () => database(null));
         // @ts-ignore
-        let module = await import('~/server/api/auth/password-code/request.post.ts');
+        let module = await import('#server/api/auth/password-code/request.post.ts');
         await expect(module.default({} as H3Event)).resolves.toMatchObject({message: expect.any(String)})
         vi.resetModules();
         vi.stubGlobal('database', () => database({
@@ -108,7 +108,7 @@ describe('demande de code', () => {
             active: 1
         }, {created_at: new Date().toISOString()}));
         // @ts-ignore
-        module = await import('~/server/api/auth/password-code/request.post.ts');
+        module = await import('#server/api/auth/password-code/request.post.ts');
         await expect(module.default({} as H3Event)).resolves.toMatchObject({message: expect.any(String)})
     })
     it('masque une panne SMTP à un visiteur et supprime le code inutilisable', async () => {
@@ -136,7 +136,7 @@ describe('demande de code', () => {
             throw new Error('smtp')
         })
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/auth/password-code/request.post.ts')
+        const {default: handler} = await import('#server/api/auth/password-code/request.post.ts')
         await expect(handler({} as H3Event)).resolves.toMatchObject({message: expect.any(String)})
         expect(run).toHaveBeenCalledWith('DELETE FROM password_reset_codes WHERE id=?', 7);
         expect(error).toHaveBeenCalled()
@@ -150,7 +150,7 @@ describe('confirmation du code', () => {
     }, {code: '123456', password: 'x'.repeat(129)}])('refuse un formulaire invalide', async body => {
         vi.stubGlobal('readBody', async () => body)
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/auth/password-code/confirm.post.ts')
+        const {default: handler} = await import('#server/api/auth/password-code/confirm.post.ts')
         await expect(handler({} as H3Event)).rejects.toMatchObject({statusCode: 400})
     })
     it('refuse un code expiré ou après cinq essais', async () => {
@@ -171,7 +171,7 @@ describe('confirmation du code', () => {
             })
         }))
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/auth/password-code/confirm.post.ts')
+        const {default: handler} = await import('#server/api/auth/password-code/confirm.post.ts')
         await expect(handler({} as H3Event)).rejects.toMatchObject({statusCode: 400})
     })
     it('refuse un compte désactivé et une demande sans code actif', async () => {
@@ -183,7 +183,7 @@ describe('confirmation du code', () => {
         vi.stubGlobal('sessionUser', async () => null)
         vi.stubGlobal('database', () => ({prepare: () => ({bind: () => ({first: async () => ({id: 1, active: 0})})})}));
         // @ts-ignore
-        let module = await import('~/server/api/auth/password-code/confirm.post.ts');
+        let module = await import('#server/api/auth/password-code/confirm.post.ts');
         await expect(module.default({} as H3Event)).rejects.toMatchObject({statusCode: 400})
         vi.resetModules();
         let calls = 0;
@@ -198,7 +198,7 @@ describe('confirmation du code', () => {
             })
         }));
         // @ts-ignore
-        module = await import('~/server/api/auth/password-code/confirm.post.ts');
+        module = await import('#server/api/auth/password-code/confirm.post.ts');
         await expect(module.default({} as H3Event)).rejects.toMatchObject({statusCode: 400})
     })
     it('consomme le code, change le mot de passe et connecte un visiteur', async () => {
@@ -230,7 +230,7 @@ describe('confirmation du code', () => {
         const sign = vi.fn();
         vi.stubGlobal('signSession', sign)
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/auth/password-code/confirm.post.ts')
+        const {default: handler} = await import('#server/api/auth/password-code/confirm.post.ts')
         await expect(handler({} as H3Event)).resolves.toEqual({success: true})
         expect(batch).toHaveBeenCalledOnce();
         expect(sign).toHaveBeenCalledOnce()
@@ -263,7 +263,7 @@ describe('confirmation du code', () => {
         vi.stubGlobal('hashSecurityCode', async () => 'mauvais-hash');
         vi.stubGlobal('safeEqual', () => false)
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/auth/password-code/confirm.post.ts')
+        const {default: handler} = await import('#server/api/auth/password-code/confirm.post.ts')
         await expect(handler({} as H3Event)).rejects.toMatchObject({statusCode: 400});
         expect(run).toHaveBeenCalled();
         expect(batch).not.toHaveBeenCalled()
@@ -292,7 +292,7 @@ describe('confirmation du code', () => {
         const sign = vi.fn();
         vi.stubGlobal('signSession', sign)
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/auth/password-code/confirm.post.ts')
+        const {default: handler} = await import('#server/api/auth/password-code/confirm.post.ts')
         await expect(handler({} as H3Event)).resolves.toEqual({success: true});
         expect(batch).toHaveBeenCalled();
         expect(sign).not.toHaveBeenCalled()
@@ -322,7 +322,7 @@ describe('confirmation du code', () => {
         const sign = vi.fn()
         vi.stubGlobal('signSession', sign)
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/auth/password-code/confirm.post.ts')
+        const {default: handler} = await import('#server/api/auth/password-code/confirm.post.ts')
         await expect(handler({} as H3Event)).resolves.toEqual({success: true})
         expect(db.prepare).toHaveBeenCalledWith(expect.stringContaining('purpose=?'))
         expect(batch).toHaveBeenCalledOnce()
@@ -352,7 +352,7 @@ describe('réinitialisation initiée par un administrateur', () => {
         const send = vi.fn()
         vi.stubGlobal('sendAdminPasswordReset', send)
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/admin/users/[id]/password-reset.post.ts')
+        const {default: handler} = await import('#server/api/admin/users/[id]/password-reset.post.ts')
         await expect(handler({} as H3Event)).resolves.toEqual({message: 'Le lien de réinitialisation a été envoyé.'})
         expect(send).toHaveBeenCalledWith({}, 'client@example.test', expect.stringMatching(/^https:\/\/boutique\.example\/mot-de-passe-oublie\?uid=8&token=/))
         expect(run).toHaveBeenCalledWith(expect.stringContaining("'admin-link'"), 8, 'hash-du-jeton', expect.any(String), expect.any(String))
@@ -362,13 +362,13 @@ describe('réinitialisation initiée par un administrateur', () => {
         vi.stubGlobal('requireAdmin', vi.fn())
         vi.stubGlobal('getRouterParam', () => 'abc')
         // @ts-ignore
-        let module = await import('~/server/api/admin/users/[id]/password-reset.post.ts')
+        let module = await import('#server/api/admin/users/[id]/password-reset.post.ts')
         await expect(module.default({} as H3Event)).rejects.toMatchObject({statusCode: 400})
         vi.resetModules()
         vi.stubGlobal('getRouterParam', () => '5')
         vi.stubGlobal('database', () => ({prepare: () => ({bind: () => ({first: async () => ({id: 5, active: 0})})})}))
         // @ts-ignore
-        module = await import('~/server/api/admin/users/[id]/password-reset.post.ts')
+        module = await import('#server/api/admin/users/[id]/password-reset.post.ts')
         await expect(module.default({} as H3Event)).rejects.toMatchObject({statusCode: 404})
     })
 
@@ -393,7 +393,7 @@ describe('réinitialisation initiée par un administrateur', () => {
             throw new Error('smtp')
         })
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/admin/users/[id]/password-reset.post.ts')
+        const {default: handler} = await import('#server/api/admin/users/[id]/password-reset.post.ts')
         await expect(handler({} as H3Event)).rejects.toThrow('smtp')
         expect(deleted).toHaveBeenCalledOnce()
     })

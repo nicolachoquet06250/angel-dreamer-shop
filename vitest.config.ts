@@ -5,7 +5,12 @@ import {defineConfig} from 'vitest/config'
 export default defineConfig({
     plugins: [vue()],
     define: {'import.meta.client': 'true', 'import.meta.server': 'false'},
-    resolve: {alias: {'~': fileURLToPath(new URL('.', import.meta.url))}},
+    resolve: {
+        alias: {
+            '~': fileURLToPath(new URL('.', import.meta.url)),
+            '#server': fileURLToPath(new URL('./server', import.meta.url))
+        }
+    },
     test: {
         environment: 'jsdom',
         setupFiles: ['./tests/setup.ts'],

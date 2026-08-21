@@ -7,7 +7,7 @@ import {
     sessionUser,
     signSession,
     verifyPassword
-} from '~/server/utils/auth'
+} from '#server/utils/auth'
 
 afterEach(() => {
     vi.restoreAllMocks()

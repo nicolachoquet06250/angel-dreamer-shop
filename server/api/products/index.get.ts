@@ -1,3 +1,5 @@
+import {enrichProductsWithDiscounts} from "#server/utils/discounts";
+
 export default defineEventHandler(async event => {
     const db = database(event);
     await ready(db);
@@ -6,5 +8,6 @@ export default defineEventHandler(async event => {
     let products = await mapProductsWithRelations(db, results);
     if (query.category) products = products.filter(product => product.categories.some(category => category.slug === String(query.category)));
     if (query.universe) products = products.filter(product => product.universeIds.includes(Number(query.universe)));
-    return products
+    const discountMap = await enrichProductsWithDiscounts(db, products);
+    return products.map(p => ({...p, discountedPriceCents: discountMap.get(p.id) ?? null}))
 })

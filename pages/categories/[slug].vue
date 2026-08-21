@@ -48,7 +48,23 @@ useSeoMeta({
         <ProductCard v-for="product in products" :key="product.id" :product="product" :cart-disabled="cartDisabled"/>
       </div>
       <p v-if="!products.length" :class="styles.empty">{{ content.categoryEmptyText }}</p></section>
-    <footer :class="styles.footer"><strong>{{ content.footerBrand }}</strong><span>{{ content.footerText }}</span>
-    </footer>
+    <footer :class="styles.footer">
+       <div :class="styles.footerMain">
+         <span>
+            {{ content.footerBrand }}<i>•</i>
+         </span>
+         <span>
+          <span>
+            <span>{{ content.footerText }}</span>
+          </span>
+          <span :class="styles.footerCopyright" />
+        </span>
+       </div>
+       <nav :class="styles.footerLinks">
+         <NuxtLink to="/contact">Contact</NuxtLink>
+         <NuxtLink v-if="content.cguContent" to="/cgu">CGU</NuxtLink>
+         <NuxtLink v-if="content.cgvContent" to="/cgv">CGV</NuxtLink>
+       </nav>
+     </footer>
   </main>
 </template>

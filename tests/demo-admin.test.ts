@@ -23,7 +23,7 @@ describe('création d’un utilisateur de démonstration', () => {
         vi.stubGlobal('database', () => ({prepare}))
         vi.stubGlobal('hashPassword', vi.fn(async () => 'mot-de-passe-hache'))
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/admin/users/demo.post.ts')
+        const {default: handler} = await import('#server/api/admin/users/demo.post.ts')
         const result = await handler({method: 'POST'} as H3Event)
         expect(result.user).toMatchObject({id: 42, role: 'demo', active: true})
         expect(result.user.email).toMatch(/^demo-[a-f0-9]{16}@demo\.angel-dreamer\.local$/)
@@ -40,7 +40,7 @@ describe('création d’un utilisateur de démonstration', () => {
         const database = vi.fn()
         vi.stubGlobal('database', database)
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/admin/users/demo.post.ts')
+        const {default: handler} = await import('#server/api/admin/users/demo.post.ts')
         await expect(handler({method: 'POST'} as H3Event)).rejects.toBe(denied)
         expect(database).not.toHaveBeenCalled()
     })
@@ -61,7 +61,7 @@ describe('suppression d’un utilisateur de démonstration', () => {
         vi.stubGlobal('getRouterParam', () => '9')
         vi.stubGlobal('database', () => db)
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/admin/users/[id].delete.ts')
+        const {default: handler} = await import('#server/api/admin/users/[id].delete.ts')
         await expect(handler({method: 'DELETE'} as H3Event)).resolves.toEqual({ok: true})
         expect(deleted).toHaveBeenCalledWith('DELETE FROM users WHERE id=?', 9)
     })
@@ -70,14 +70,14 @@ describe('suppression d’un utilisateur de démonstration', () => {
         vi.stubGlobal('requireAdmin', vi.fn())
         vi.stubGlobal('getRouterParam', () => 'abc')
         // @ts-ignore
-        let module = await import('~/server/api/admin/users/[id].delete.ts')
+        let module = await import('#server/api/admin/users/[id].delete.ts')
         await expect(module.default({method: 'DELETE'} as H3Event)).rejects.toMatchObject({statusCode: 400})
 
         vi.resetModules()
         vi.stubGlobal('getRouterParam', () => '4')
         vi.stubGlobal('database', () => ({prepare: () => ({bind: () => ({first: async () => null})})}))
         // @ts-ignore
-        module = await import('~/server/api/admin/users/[id].delete.ts')
+        module = await import('#server/api/admin/users/[id].delete.ts')
         await expect(module.default({method: 'DELETE'} as H3Event)).rejects.toMatchObject({statusCode: 404})
 
         vi.resetModules()
@@ -92,7 +92,7 @@ describe('suppression d’un utilisateur de démonstration', () => {
             })
         }))
         // @ts-ignore
-        module = await import('~/server/api/admin/users/[id].delete.ts')
+        module = await import('#server/api/admin/users/[id].delete.ts')
         await expect(module.default({method: 'DELETE'} as H3Event)).rejects.toMatchObject({statusCode: 403})
     })
 })

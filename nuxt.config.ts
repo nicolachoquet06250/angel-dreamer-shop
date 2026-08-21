@@ -8,6 +8,19 @@ export default defineNuxtConfig({
     },
     css: [],
     modules: [],
+    vite: {
+        optimizeDeps: {
+            include: [
+                '@tiptap/extension-link',
+                '@tiptap/extension-placeholder',
+                '@tiptap/extension-underline',
+                '@tiptap/extension-unique-id',
+                '@tiptap/starter-kit',
+                '@tiptap/vue-3',
+                'marked',
+            ]
+        }
+    },
     nitro: {
         preset: "node-server",
         rollupConfig: {plugins: [vue()]},
@@ -51,6 +64,7 @@ export default defineNuxtConfig({
         smtpUser: "",
         smtpPassword: "",
         emailFrom: "",
+        contactEmail: "",
         public: {
             stripePublishableKey: "",
             paypalClientId: "",

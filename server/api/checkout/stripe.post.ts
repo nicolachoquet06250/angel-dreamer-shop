@@ -9,7 +9,8 @@ export default defineEventHandler(async event => {
         statusMessage: "Stripe n’est pas encore configuré"
     });
     const body = await readBody(event);
-    const lines = await checkoutLines(event, body.lines || []);
+    const {lines, promoError} = await checkoutLines(event, body.lines || [], body.promoCode);
+    if (promoError) throw createError({statusCode: 400, statusMessage: promoError});
     const stripe = new Stripe(config.stripeSecretKey);
     const origin = config.public.siteUrl || getRequestURL(event).origin;
     const session = await stripe.checkout.sessions.create({
@@ -17,7 +18,11 @@ export default defineEventHandler(async event => {
         customer_email: user.email,
         line_items: lines.map(l => ({
             quantity: l.quantity,
-            price_data: {currency: "eur", unit_amount: l.price, product_data: {name: l.name}}
+            price_data: {
+                currency: "eur",
+                unit_amount: l.price,
+                product_data: {name: l.name + (l.originalPrice !== l.price ? ` (remisé)` : '')}
+            }
         })),
         success_url: `${origin}/commande?success=stripe&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/panier?cancelled=1`,

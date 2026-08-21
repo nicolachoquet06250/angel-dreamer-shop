@@ -10,8 +10,8 @@ const model = defineModel<SiteContent>({required: true})
 </script>
 <template>
   <div :class="editor.layout">
-    <div :class="editor.controls">
-      <details open>
+    <div :class="[editor.controls, $style.controls]">
+      <details open style="cursor: default" @click.prevent.stop>
         <summary>Contenu générique <span>PAGE UNIVERS</span></summary>
         <div :class="editor.fields"><label :class="page.full">Titre de la page<input
             value="Nom de l’univers (dynamique)" disabled><small>Le titre reprend automatiquement le nom de l’univers
@@ -29,7 +29,7 @@ const model = defineModel<SiteContent>({required: true})
     <aside :class="[editor.preview,page.preview,previewDark&&page.previewDark]">
       <div :class="editor.previewLabel">APERÇU · PAGE UNIVERS VIDE</div>
       <div :class="editor.miniAnnouncement">{{ model.announcement }}</div>
-      <header :class="editor.miniHeader"><span>{{ model.logoText }} <i>•</i></span></header>
+      <header :class="[editor.miniHeader, $style.miniHeader]"><span>{{ model.logoText }} <i>•</i></span></header>
       <section :class="page.page"><small>{{ model.universeEyebrow }}</small>
         <h2>Nom de l’univers</h2>
         <nav :class="catalog.filterNav">
@@ -38,7 +38,28 @@ const model = defineModel<SiteContent>({required: true})
         </nav>
         <div :class="page.empty">{{ model.universeEmptyText }}</div>
       </section>
-      <footer><strong>{{ model.footerBrand }}</strong><span>{{ model.footerText }}</span></footer>
+      <footer :class="$style.footerMain">
+        <strong>{{ model.footerBrand }}<i>•</i></strong>
+        <span>{{ model.footerText }}</span>
+      </footer>
     </aside>
   </div>
 </template>
+
+<style module>
+.footerMain, .miniHeader {
+  i {
+    color: var(--accent);
+    font-style: normal;
+
+    &:last-of-type {
+      display: inline-block;
+      translate: 0 5px;
+    }
+  }
+}
+
+.controls > details > summary::marker {
+  content: "";
+}
+</style>

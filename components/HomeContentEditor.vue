@@ -592,7 +592,7 @@ function scaled(image: Universe['image']) {
     <aside :class="[styles.preview,props.previewDark ? previewTheme.dark : previewTheme.light]">
       <div :class="styles.previewLabel">APERÇU EN DIRECT</div>
       <div :class="styles.miniAnnouncement">{{ model.announcement }}</div>
-      <div :class="styles.miniHeader">{{ model.logoText }}.</div>
+      <div :class="[styles.miniHeader, $style.miniHeader]">{{ model.logoText }}<i>.</i></div>
       <div :class="[styles.miniHero,props.previewDark?previewTheme.heroDark:previewTheme.heroLight]"
            :style="previewImage(model.heroImage) ? { backgroundImage: `linear-gradient(90deg,${props.previewDark?'#111d,#1114':'#f5f2ebee,#f5f2eb33'}),url(${previewImage(model.heroImage)?.content})`, backgroundSize: `${imageScale(model.heroImage) * 100}% auto`, backgroundRepeat: 'no-repeat', backgroundPosition: 'center' } : {}">
         <h2>{{ model.heroTitle }}</h2>
@@ -656,7 +656,12 @@ function scaled(image: Universe['image']) {
           <p>{{ model.workshopText }}</p>
         </div>
       </div>
-      <footer>{{ model.footerBrand }} <span>{{ model.footerText }}</span></footer>
+      <footer :class="$style.footerMain">
+        <span>
+          {{ model.footerBrand }}<i>•</i>
+        </span>
+        <span>{{ model.footerText }}</span>
+      </footer>
     </aside>
     <Teleport to="body">
       <div v-if="pickerOpen" :class="pickerStyles.overlay" @click.self="pickerOpen=false">
@@ -686,7 +691,7 @@ function scaled(image: Universe['image']) {
               }} €</small></span><b>{{ favoriteIds.includes(product.id) ? '✓' : '+' }}</b>
             </button>
           </div>
-          <footer><span>{{ favoriteIds.length }} / 4 sélectionnés</span>
+          <footer :class="$style.footerMain"><span>{{ favoriteIds.length }} / 4 sélectionnés</span>
             <button type="button" @click="pickerOpen=false">Terminer</button>
           </footer>
         </section>
@@ -694,3 +699,17 @@ function scaled(image: Universe['image']) {
     </Teleport>
   </div>
 </template>
+
+<style module>
+.footerMain, .miniHeader {
+  i {
+    color: var(--accent);
+    font-style: normal;
+
+    &:last-of-type {
+      display: inline-block;
+      translate: 0 2px;
+    }
+  }
+}
+</style>

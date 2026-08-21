@@ -85,6 +85,32 @@ function addNow() {
   flex: 0 0 auto
 }
 .addToCart:disabled { cursor:not-allowed; opacity:.55 }
+
+.priceBlock {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 6px 0
+}
+
+.discountedPrice {
+  color: var(--accent);
+  font-size: 1.5em;
+  font-weight: 700
+}
+
+.originalPrice {
+  text-decoration: line-through;
+  color: var(--muted);
+  font-size: .95em;
+  font-weight: 400
+}
+
+.regularPrice {
+  font-size: 1.3em;
+  font-weight: 700
+}
 </style>
 <template>
   <main :class="productStyles.page">
@@ -101,7 +127,16 @@ function addNow() {
       <div :class="styles.detailCopy">
         <NuxtLink to="/">< Collection</NuxtLink>
         <small>{{ product.categories.map(item => item.label).join(' · ') }}</small>
-        <h1>{{ product.name }}</h1><strong>{{ (product.priceCents / 100).toFixed(2).replace('.', ',') }} €</strong>
+        <h1>{{ product.name }}</h1>
+        <div :class="productStyles.priceBlock">
+          <strong v-if="product.discountedPriceCents != null" :class="productStyles.discountedPrice">{{
+              (product.discountedPriceCents / 100).toFixed(2).replace('.', ',')
+            }} €</strong>
+          <span
+              :class="product.discountedPriceCents != null ? productStyles.originalPrice : productStyles.regularPrice">{{
+              (product.priceCents / 100).toFixed(2).replace('.', ',')
+            }} €</span>
+        </div>
         <p>{{ product.description }}</p>
         <ul>
           <li>Imprimé à la demande en France</li>
@@ -114,7 +149,21 @@ function addNow() {
         </button>
       </div>
     </div>
-    <footer :class="styles.footer"><strong>{{ content.footerBrand }}</strong><span>{{ content.footerText }}</span>
-    </footer>
+    <footer :class="styles.footer">
+       <div :class="styles.footerMain">
+         {{ content.footerBrand }}<i>•</i>
+         <span>
+          <span>
+            <span>{{ content.footerText }}</span>
+          </span>
+          <span :class="styles.footerCopyright" />
+        </span>
+       </div>
+       <nav :class="styles.footerLinks">
+         <NuxtLink to="/contact">Contact</NuxtLink>
+         <NuxtLink v-if="content.cguContent" to="/cgu">CGU</NuxtLink>
+         <NuxtLink v-if="content.cgvContent" to="/cgv">CGV</NuxtLink>
+       </nav>
+     </footer>
   </main>
 </template>

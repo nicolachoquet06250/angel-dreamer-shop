@@ -15,17 +15,17 @@ afterEach(() => {
 
 const load = {
     // @ts-ignore
-    login: () => import('~/server/api/auth/login.post.ts'),
+    login: () => import('#server/api/auth/login.post.ts'),
     // @ts-ignore
-    register: () => import('~/server/api/auth/register.post.ts'),
+    register: () => import('#server/api/auth/register.post.ts'),
     // @ts-ignore
-    changePassword: () => import('~/server/api/auth/change-password.post.ts'),
+    changePassword: () => import('#server/api/auth/change-password.post.ts'),
     // @ts-ignore
-    profile: () => import('~/server/api/auth/profile.put.ts'),
+    profile: () => import('#server/api/auth/profile.put.ts'),
     // @ts-ignore
-    me: () => import('~/server/api/auth/me.get.ts'),
+    me: () => import('#server/api/auth/me.get.ts'),
     // @ts-ignore
-    logout: () => import('~/server/api/auth/logout.post.ts')
+    logout: () => import('#server/api/auth/logout.post.ts')
 }
 
 describe('connexion', () => {

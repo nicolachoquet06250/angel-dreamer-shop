@@ -5,9 +5,18 @@ import instagramIcon from '~/assets/icons/instagram.png'
 import whatsappIcon from '~/assets/icons/whatsapp.png'
 import xIcon from '~/assets/icons/x.png'
 import type {ValidationIssue} from '~/utils/admin-validation'
+import {adminSeoTabs, type AdminSeoSection} from '~/utils/admin-routing'
 
-const props = withDefaults(defineProps<{ modelValue: SiteContent; readonly?: boolean; validationIssues?: ValidationIssue[] }>(), {readonly: false})
-const emit = defineEmits<{ (event: 'update:modelValue', value: SiteContent): void }>()
+const props = withDefaults(defineProps<{
+  modelValue: SiteContent
+  section: AdminSeoSection
+  readonly?: boolean
+  validationIssues?: ValidationIssue[]
+}>(), {readonly: false})
+const emit = defineEmits<{
+  (event: 'update:modelValue', value: SiteContent): void
+  (event: 'update:section', value: AdminSeoSection): void
+}>()
 const $requestUrl = useRequestURL()
 const content = computed({get: () => props.modelValue, set: value => emit('update:modelValue', value)})
 type Audit = {
@@ -20,7 +29,6 @@ const audit = ref<Audit | null>(null)
 const auditing = ref(false)
 const auditError = ref('')
 const preview = ref<'facebook' | 'x' | 'whatsapp' | 'instagram'>('facebook')
-const seoSection = ref<'home' | 'product' | 'universe' | 'category' | 'universeCategory'>('home')
 const socialIcons = {facebook: facebookIcon, x: xIcon, whatsapp: whatsappIcon, instagram: instagramIcon}
 const imageUrl = computed(() => content.value.seoOgImage?.content || '/og.png')
 const displayUrl = computed(() => content.value.seoCanonicalUrl || (() => {
@@ -40,19 +48,20 @@ async function runAudit() {
     auditing.value = false
   }
 }
+
+function selectSeoSection(section: string) {
+  const selected = adminSeoTabs.find(item => item.id === section)
+  if (selected) emit('update:section', selected.id)
+}
 </script>
 
 <template>
   <div>
-    <HorizontalCarousel :track-class="$style.seoSubTabs" label="les sous-onglets de référencement">
-      <button
-          v-for="section in [{id:'home',label:'Page d’accueil'},{id:'product',label:'Pages produit'},{id:'universe',label:'Pages univers'},{id:'universeCategory',label:'Page catégories d’univers'},{id:'category',label:'Pages catégorie'}]"
-          :key="section.id" type="button" data-demo-interactive :aria-pressed="seoSection===section.id"
-          @click="seoSection=section.id as any">{{ section.label }}
-      </button>
-    </HorizontalCarousel>
-    <SeoPageTemplates v-if="seoSection!=='home'" v-model="content" :page="seoSection" :readonly="readonly"/>
-    <div v-else :class="$style.layout">
+    <AdminSubTabs :tabs="adminSeoTabs" :active="section" label="les sous-onglets de référencement"
+                  id-prefix="seo-tab" panel-prefix="seo-panel" @select="selectSeoSection"/>
+    <div :id="`seo-panel-${section}`" role="tabpanel" :aria-labelledby="`seo-tab-${section}`">
+      <SeoPageTemplates v-if="section!=='home'" v-model="content" :page="section" :readonly="readonly"/>
+      <div v-else :class="$style.layout">
       <div :class="$style.fields">
         <details open>
           <summary>Référencement général</summary>
@@ -193,36 +202,12 @@ async function runAudit() {
           </ul>
         </section>
       </aside>
+      </div>
     </div>
   </div>
 </template>
 
 <style module>
-.seoSubTabs {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 7px;
-  margin: 14px 0 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--line)
-}
-
-.seoSubTabs button {
-  padding: 9px 13px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--text);
-  font-weight: 700;
-  cursor: pointer
-}
-
-.seoSubTabs button[aria-pressed=true] {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #fff
-}
-
 .layout {
   display: grid;
   grid-template-columns:minmax(0, 1.1fr) minmax(320px, .9fr);

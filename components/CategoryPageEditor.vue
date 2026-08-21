@@ -9,8 +9,8 @@ const model = defineModel<SiteContent>({required: true})
 </script>
 <template>
   <div :class="editor.layout">
-    <div :class="editor.controls">
-      <details open>
+    <div :class="[editor.controls, $style.controls]">
+      <details open style="cursor: default" @click.prevent.stop>
         <summary>Contenu générique <span>PAGE CATÉGORIE</span></summary>
         <div :class="editor.fields"><label :class="category.full">Titre de la page<input
             value="Nom de la catégorie (dynamique)" disabled><small>Le titre reprend automatiquement le nom de la
@@ -29,13 +29,34 @@ const model = defineModel<SiteContent>({required: true})
     <aside :class="[editor.preview,category.preview,previewDark&&category.previewDark]">
       <div :class="editor.previewLabel">APERÇU · PAGE CATÉGORIE VIDE</div>
       <div :class="editor.miniAnnouncement">{{ model.announcement }}</div>
-      <header :class="editor.miniHeader"><span>{{ model.logoText }} <i>•</i></span></header>
-      <section :class="category.page"><small>{{ model.categoryEyebrow }}</small>
+      <header :class="[editor.miniHeader, $style.miniHeader]"><span>{{ model.logoText }} <i>•</i></span></header>
+      <section :class="category.page"><small>{{ model.logoText }}<i>•</i></small>
         <h2>Nom de la catégorie</h2>
         <p>{{ model.categoryDescription }}</p>
         <div :class="category.empty">{{ model.categoryEmptyText }}</div>
       </section>
-      <footer><strong>{{ model.footerBrand }}</strong><span>{{ model.footerText }}</span></footer>
+      <footer :class="$style.footerMain">
+        <strong>{{ model.footerBrand }}<i>•</i></strong>
+        <span>{{ model.footerText }}</span>
+      </footer>
     </aside>
   </div>
 </template>
+
+<style module>
+.footerMain, .miniHeader {
+  i {
+    color: var(--accent);
+    font-style: normal;
+
+    &:last-of-type {
+      display: inline-block;
+      translate: 0 5px;
+    }
+  }
+}
+
+.controls > details > summary::marker {
+  content: "";
+}
+</style>

@@ -107,3 +107,39 @@ export const orders = mysqlTable('orders', {
     customerEmail: varchar('customer_email', {length: 191}),
     createdAt: varchar('created_at', {length: 32}).notNull()
 }, table => [uniqueIndex('idx_orders_provider_id').on(table.provider, table.providerOrderId)])
+
+export const discounts = mysqlTable('discounts', {
+    id: int('id', {unsigned: true}).autoincrement().primaryKey(),
+    label: varchar('label', {length: 255}).notNull(),
+    type: varchar('type', {length: 16}).notNull(), // 'percent' | 'fixed'
+    value: int('value', {unsigned: true}).notNull(), // percent (0-100) or cents
+    active: tinyint('active').notNull().default(1),
+    startsAt: varchar('starts_at', {length: 32}),
+    endsAt: varchar('ends_at', {length: 32}),
+    createdAt: varchar('created_at', {length: 32}).notNull()
+})
+
+export const discountRules = mysqlTable('discount_rules', {
+    id: int('id', {unsigned: true}).autoincrement().primaryKey(),
+    discountId: int('discount_id', {unsigned: true}).notNull().references(() => discounts.id, {onDelete: 'cascade'}),
+    scope: varchar('scope', {length: 16}).notNull(), // 'product' | 'category' | 'universe'
+    targetId: int('target_id', {unsigned: true}).notNull()
+})
+
+export const promoCodes = mysqlTable('promo_codes', {
+    id: int('id', {unsigned: true}).autoincrement().primaryKey(),
+    code: varchar('code', {length: 64}).notNull().unique(),
+    active: tinyint('active').notNull().default(1),
+    startsAt: varchar('starts_at', {length: 32}),
+    endsAt: varchar('ends_at', {length: 32}),
+    createdAt: varchar('created_at', {length: 32}).notNull()
+})
+
+export const promoCodeRules = mysqlTable('promo_code_rules', {
+    id: int('id', {unsigned: true}).autoincrement().primaryKey(),
+    promoCodeId: int('promo_code_id', {unsigned: true}).notNull().references(() => promoCodes.id, {onDelete: 'cascade'}),
+    scope: varchar('scope', {length: 16}).notNull(), // 'product' | 'category' | 'universe' | 'all'
+    targetId: int('target_id', {unsigned: true}),
+    type: varchar('type', {length: 16}).notNull(), // 'percent' | 'fixed'
+    value: int('value', {unsigned: true}).notNull()
+})

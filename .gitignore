@@ -21,7 +21,8 @@ npm-debug.log*
 
 # env files (can opt-in for committing if needed)
 .env
-.env.local
+.env.*
+!.env.example
 
 # typescript
 next-env.d.ts

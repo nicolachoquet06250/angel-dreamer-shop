@@ -7,25 +7,40 @@
 
 .controls {
     display: grid;
+    align-content: start;
     gap: 10px
 }
 
 .controls details {
+    align-self: start;
+    height: 51px;
+    overflow: hidden;
     border: 1px solid var(--line);
     background: var(--bg)
 }
 
+.controls details[open] {
+    height: auto;
+    overflow: visible
+}
+
 .controls summary {
-    display: flex;
-    justify-content: space-between;
+    display: list-item;
     padding: 14px;
     cursor: pointer;
     font-weight: 700
 }
 
 .controls summary span {
+    float: right;
+    max-width: 45%;
+    margin-left: 12px;
+    overflow: hidden;
     color: var(--muted);
-    font-size: 10px
+    font-size: 10px;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap
 }
 
 .fields,

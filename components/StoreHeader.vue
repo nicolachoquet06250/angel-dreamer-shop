@@ -33,6 +33,7 @@ function toggle() {
       <NuxtLink v-for="category in categories" :key="category.id" :to="`/categories/${category.slug}`">
         {{ category.label }}
       </NuxtLink>
+      <NuxtLink to="/contact">Contact</NuxtLink>
       <NuxtLink v-if="['admin','demo'].includes(session?.user?.role || '')" to="/admin">Administrer</NuxtLink>
     </nav>
     <div :class="styles.headerActions">

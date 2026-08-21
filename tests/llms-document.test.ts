@@ -1,5 +1,5 @@
 import {afterEach, describe, expect, it, vi} from 'vitest'
-import {buildLlmsDocument, formatLlmsDocument} from '~/server/utils/llms-document'
+import {buildLlmsDocument, formatLlmsDocument} from '#server/utils/llms-document'
 
 afterEach(() => vi.unstubAllGlobals())
 

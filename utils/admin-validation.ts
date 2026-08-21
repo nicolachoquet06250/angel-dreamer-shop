@@ -85,6 +85,18 @@ export function validateSeo(content: SiteContent) {
     return issues
 }
 
+export function validateCartSeo(content: SiteContent) {
+    const issues: ValidationIssue[] = []
+    if (empty(content.seoCartTitle)) issues.push(issue('seoCartTitle', 'error', 'Le titre de la page panier est obligatoire.'))
+    return issues
+}
+
+export function validateProfileSeo(content: SiteContent) {
+    const issues: ValidationIssue[] = []
+    if (empty(content.seoProfileTitle)) issues.push(issue('seoProfileTitle', 'error', 'Le titre de la page profil est obligatoire.'))
+    return issues
+}
+
 export function validateProduct(product: Product) {
     const issues: ValidationIssue[] = []
     if (empty(product.name)) issues.push(issue('product.name', 'error', 'Le nom du produit est obligatoire.'))

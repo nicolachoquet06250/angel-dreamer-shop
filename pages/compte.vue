@@ -1,5 +1,7 @@
 <script setup lang="ts">import styles from '~/assets/css/site.module.css';
+import {renderSeoTemplate} from '~/utils/seo-template';
 
+const {data: content} = await useFetch<any>('/api/content');
 const profileStyles = useCssModule('profileStyles');
 type Profile = {
   email: string;
@@ -10,6 +12,15 @@ type Profile = {
   createdAt: string
 };
 const {data} = await useFetch<{ user: Profile | null }>('/api/auth/me');
+
+useSeoMeta({
+  title: () => renderSeoTemplate(content.value?.seoProfileTitle, {
+    'Nom du site': content.value?.seoSiteName,
+    ['Prénom']: data.value?.user?.firstName,
+    'Nom': data.value?.user?.lastName,
+    'Email': data.value?.user?.email
+  })
+});
 if (!data.value?.user) await navigateTo('/connexion?returnTo=/compte'); else if (data.value.user.mustChangePassword) await navigateTo('/changer-mot-de-passe');
 const firstName = ref(data.value?.user?.firstName || '');
 const lastName = ref(data.value?.user?.lastName || '');

@@ -30,7 +30,8 @@ export type Product = {
     universeIds: number[];
     featured: boolean;
     featuredPosition: number | null;
-    active: boolean
+    active: boolean;
+    discountedPriceCents?: number | null
 }
 export type SiteContent = {
     announcement: string;
@@ -110,7 +111,12 @@ export type SiteContent = {
     seoUniverseCategoryTitle: string;
     seoUniverseCategoryDescription: string;
     seoUniverseCategoryOgTitle: string;
-    seoUniverseCategoryOgDescription: string
+    seoUniverseCategoryOgDescription: string;
+    seoCartTitle: string;
+    seoProfileTitle: string;
+    cguContent: string;
+    cgvContent: string;
+    contactEmail: string
 }
 export const imageContentKeys = ['heroImage', 'value1Image', 'value2Image', 'value3Image', 'workshopImage', 'seoOgImage', 'seoProductOgImage'] as const
 export type ImageContentKey = typeof imageContentKeys[number]
@@ -192,6 +198,11 @@ export const defaultSiteContent: SiteContent = {
     seoUniverseCategoryTitle: '[Nom de la catégorie] — [Nom de l’univers] · [Nom du site]',
     seoUniverseCategoryDescription: 'Découvrez les produits [Nom de la catégorie] de l’univers [Nom de l’univers] sur [Nom du site].',
     seoUniverseCategoryOgTitle: '[Nom de la catégorie] — [Nom de l’univers]',
-    seoUniverseCategoryOgDescription: 'Explorez notre sélection [Nom de la catégorie] dans l’univers [Nom de l’univers].'
+    seoUniverseCategoryOgDescription: 'Explorez notre sélection [Nom de la catégorie] dans l’univers [Nom de l’univers].',
+    seoCartTitle: 'Votre panier | [Nom du site]',
+    seoProfileTitle: 'Mon compte | [Nom du site]',
+    cguContent: '',
+    cgvContent: '',
+    contactEmail: ''
 }
 export type CartLine = { product: Product; quantity: number }

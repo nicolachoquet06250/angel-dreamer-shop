@@ -128,7 +128,12 @@ export async function ready(db: AppDatabase) {
         db.prepare('CREATE TABLE IF NOT EXISTS product_universes (product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE, universe_id INTEGER NOT NULL REFERENCES universes(id) ON DELETE CASCADE, PRIMARY KEY(product_id,universe_id))'),
         db.prepare('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, first_name TEXT, last_name TEXT, password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT \'customer\', active INTEGER NOT NULL DEFAULT 1, must_change_password INTEGER NOT NULL DEFAULT 0, created_by_admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL, created_at TEXT NOT NULL)'),
         db.prepare('CREATE TABLE IF NOT EXISTS password_reset_codes (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, code_hash TEXT NOT NULL, purpose TEXT NOT NULL, expires_at TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, used_at TEXT, created_at TEXT NOT NULL)'),
-        db.prepare('CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, provider TEXT NOT NULL, provider_order_id TEXT NOT NULL, amount_cents INTEGER NOT NULL, status TEXT NOT NULL, customer_email TEXT, created_at TEXT NOT NULL)')
+        db.prepare('CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY AUTOINCREMENT, provider TEXT NOT NULL, provider_order_id TEXT NOT NULL, amount_cents INTEGER NOT NULL, status TEXT NOT NULL, customer_email TEXT, created_at TEXT NOT NULL)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS discounts (id INTEGER PRIMARY KEY AUTOINCREMENT, label TEXT NOT NULL, type TEXT NOT NULL, value INTEGER NOT NULL, active INTEGER NOT NULL DEFAULT 1, starts_at TEXT, ends_at TEXT, created_at TEXT NOT NULL)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS discount_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, discount_id INTEGER NOT NULL REFERENCES discounts(id) ON DELETE CASCADE, scope TEXT NOT NULL, target_id INTEGER NOT NULL)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS promo_codes (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL UNIQUE, active INTEGER NOT NULL DEFAULT 1, starts_at TEXT, ends_at TEXT, created_at TEXT NOT NULL)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS promo_code_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, promo_code_id INTEGER NOT NULL REFERENCES promo_codes(id) ON DELETE CASCADE, scope TEXT NOT NULL, target_id INTEGER, type TEXT NOT NULL, value INTEGER NOT NULL)'),
+        db.prepare('CREATE TABLE IF NOT EXISTS contact_attachments (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT NOT NULL, mimetype TEXT NOT NULL, size INTEGER NOT NULL, data BLOB NOT NULL, created_at INTEGER NOT NULL DEFAULT (unixepoch()))')
     ])
     const {results: imageColumns} = await db.prepare('PRAGMA table_info(images)').all<any>();
     if (!imageColumns.some(column => column.name === 'dark_image_id')) await db.prepare('ALTER TABLE images ADD COLUMN dark_image_id INTEGER REFERENCES images(id) ON DELETE SET NULL').run()
@@ -337,6 +342,48 @@ async function initializeMySql(db: AppDatabase) {
             customer_email VARCHAR(191) NULL,
             created_at VARCHAR(32) NOT NULL,
             UNIQUE KEY idx_orders_provider_id (provider,provider_order_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+        `CREATE TABLE IF NOT EXISTS discounts (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            label VARCHAR(255) NOT NULL,
+            type VARCHAR(16) NOT NULL,
+            value INT UNSIGNED NOT NULL,
+            active TINYINT(1) NOT NULL DEFAULT 1,
+            starts_at VARCHAR(32) NULL,
+            ends_at VARCHAR(32) NULL,
+            created_at VARCHAR(32) NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+        `CREATE TABLE IF NOT EXISTS discount_rules (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            discount_id INT UNSIGNED NOT NULL,
+            scope VARCHAR(16) NOT NULL,
+            target_id INT UNSIGNED NOT NULL,
+            CONSTRAINT fk_discount_rules_discount FOREIGN KEY (discount_id) REFERENCES discounts(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+        `CREATE TABLE IF NOT EXISTS promo_codes (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            code VARCHAR(64) NOT NULL UNIQUE,
+            active TINYINT(1) NOT NULL DEFAULT 1,
+            starts_at VARCHAR(32) NULL,
+            ends_at VARCHAR(32) NULL,
+            created_at VARCHAR(32) NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+        `CREATE TABLE IF NOT EXISTS promo_code_rules (
+            id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            promo_code_id INT UNSIGNED NOT NULL,
+            scope VARCHAR(16) NOT NULL,
+            target_id INT UNSIGNED NULL,
+            type VARCHAR(16) NOT NULL,
+            value INT UNSIGNED NOT NULL,
+            CONSTRAINT fk_promo_code_rules_code FOREIGN KEY (promo_code_id) REFERENCES promo_codes(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+        `CREATE TABLE IF NOT EXISTS contact_attachments (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            filename VARCHAR(255) NOT NULL,
+            mimetype VARCHAR(100) NOT NULL,
+            size INT NOT NULL,
+            data LONGBLOB NOT NULL,
+            created_at INT NOT NULL DEFAULT (UNIX_TIMESTAMP())
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
     ]
     for (const sql of statements) await db.prepare(sql).run()

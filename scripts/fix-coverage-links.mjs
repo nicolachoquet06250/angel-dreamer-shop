@@ -3,7 +3,7 @@ import {resolve} from 'node:path'
 
 const reportRoot = resolve(process.argv[2] || 'coverage')
 const marker = 'data-coverage-path-fix'
-const redirect = `<script ${marker}>if(!location.pathname.endsWith('/'))location.replace(location.pathname+'/'+location.search+location.hash)</script>`
+const redirect = `<script ${marker}>(()=>{const p=location.pathname;const target=p.endsWith('/index.html/')?p.slice(0,-11):p.endsWith('/index.html')?p.slice(0,-10):p.endsWith('/')?'':p+'/';if(target)location.replace(target+location.search+location.hash)})()</script>`
 
 async function patchDirectory(directory, isRoot = false) {
     const entries = await readdir(directory, {withFileTypes: true})

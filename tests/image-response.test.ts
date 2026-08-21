@@ -1,5 +1,5 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
-import {imageResponse} from '~/server/utils/image-response'
+import {imageResponse} from '#server/utils/image-response'
 
 const {sharpMock} = vi.hoisted(() => ({sharpMock: vi.fn()}))
 vi.mock('sharp', () => ({default: sharpMock}))

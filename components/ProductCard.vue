@@ -25,7 +25,15 @@ function addNow() {
     </NuxtLink>
     <div :class="styles.productInfo">
       <div><small>{{ product.categories.map(item => item.label).join(' · ') }}</small>
-        <h3>{{ product.name }}</h3><strong>{{ (product.priceCents / 100).toFixed(2).replace('.', ',') }} €</strong>
+        <h3>{{ product.name }}</h3>
+        <div :class="styles.productPrice">
+          <strong v-if="product.discountedPriceCents != null" :class="styles.discountedPrice">{{
+              (product.discountedPriceCents / 100).toFixed(2).replace('.', ',')
+            }} €</strong>
+          <span :class="product.discountedPriceCents != null ? styles.originalPrice : ''">{{
+              (product.priceCents / 100).toFixed(2).replace('.', ',')
+            }} €</span>
+        </div>
       </div>
       <button :disabled="cartDisabled" @click="addNow" :aria-label="cartDisabled ? 'Panier indisponible avec un compte de démonstration' : `Ajouter ${product.name}`" :title="cartDisabled ? 'Panier indisponible en mode démonstration' : undefined">{{ cartDisabled ? '×' : added ? '✓' : '+' }}</button>
     </div>

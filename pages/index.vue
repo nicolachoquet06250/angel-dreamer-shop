@@ -7,7 +7,7 @@ import catalog from '~/assets/css/catalog.module.css'
 
 const managed = useCssModule('managed')
 const imageFor = useThemedImage();
-const {data: auth} = await useFetch<{user: {role: string} | null}>('/api/auth/me');
+const {data: auth} = await useFetch<{ user: { role: string } | null }>('/api/auth/me');
 const cartDisabled = computed(() => auth.value?.user?.role === 'demo');
 const {data: allProducts} = await useFetch<Product[]>('/api/products', {default: () => []});
 const products = computed(() => allProducts.value.filter(product => product.featured).slice(0, 4));
@@ -77,6 +77,23 @@ const content = computed(() => ({...defaultSiteContent, ...stored.value}))
           <p>{{ content.workshopText }}</p></div>
       </section>
     </div>
-    <footer :class="styles.footer">{{ content.footerBrand }}<span>{{ content.footerText }}</span></footer>
+    <footer :class="styles.footer">
+      <div :class="styles.footerMain">
+        <span>
+          {{ content.footerBrand }}<i>•</i>
+        </span>
+        <span>
+          <span>
+            <span>{{ content.footerText }}</span>
+          </span>
+          <span :class="styles.footerCopyright"/>
+        </span>
+      </div>
+      <nav :class="styles.footerLinks">
+        <NuxtLink to="/contact">Contact</NuxtLink>
+        <NuxtLink v-if="content.cguContent" to="/cgu">CGU</NuxtLink>
+        <NuxtLink v-if="content.cgvContent" to="/cgv">CGV</NuxtLink>
+      </nav>
+    </footer>
   </main>
 </template>

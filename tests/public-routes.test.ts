@@ -19,7 +19,7 @@ describe('fichiers de découverte publics', () => {
         const setHeader = vi.fn()
         vi.stubGlobal('setHeader', setHeader)
         // @ts-ignore
-        const {default: handler} = await import('~/server/routes/robots.txt.get.ts')
+        const {default: handler} = await import('#server/routes/robots.txt.get.ts')
         const output = await handler({} as H3Event<EventHandlerRequest>)
         expect(output).toContain('Disallow: /admin')
         expect(output).toContain('Disallow: /api/')
@@ -41,7 +41,7 @@ describe('fichiers de découverte publics', () => {
         vi.stubGlobal('getRequestURL', () => new URL('https://fallback.test/sitemap.xml'))
         vi.stubGlobal('setHeader', vi.fn())
         // @ts-ignore
-        const {default: handler} = await import('~/server/routes/sitemap.xml.get.ts')
+        const {default: handler} = await import('#server/routes/sitemap.xml.get.ts')
         const output = await handler({} as H3Event<EventHandlerRequest>)
         expect(output).toContain('<loc>https://shop.test/</loc>')
         expect(output).toContain('/produits/mug-vague')
@@ -56,14 +56,14 @@ describe('catalogue public', () => {
         vi.stubGlobal('database', () => ({prepare: () => ({all: async () => ({results: [{id: 1}]})})}))
         vi.stubGlobal('mapCategory', () => ({id: 1, label: 'Déco'}))
         // @ts-ignore
-        let module = await import('~/server/api/categories.get.ts')
+        let module = await import('#server/api/categories.get.ts')
         await expect(module.default({} as H3Event<EventHandlerRequest>)).resolves.toEqual([{id: 1, label: 'Déco'}])
         vi.resetModules()
         vi.stubGlobal('defineEventHandler', (handler: unknown) => handler)
         vi.stubGlobal('universeSelect', 'UNIVERSES')
         vi.stubGlobal('mapUniverse', () => ({id: 1, title: 'Design'}))
         // @ts-ignore
-        module = await import('~/server/api/universes.get.ts')
+        module = await import('#server/api/universes.get.ts')
         await expect(module.default({} as H3Event<EventHandlerRequest>)).resolves.toEqual([{id: 1, title: 'Design'}])
     })
 
@@ -76,20 +76,28 @@ describe('catalogue public', () => {
         vi.stubGlobal('productSelect', 'PRODUCTS')
         vi.stubGlobal('mapProductsWithRelations', async () => products)
         vi.stubGlobal('getQuery', () => ({category: 'deco', universe: '2'}))
+        vi.stubGlobal('enrichProductsWithDiscounts', async () => new Map([[1, null], [2, null]]))
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/products/index.get.ts')
-        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual([products[0]])
+        const {default: handler} = await import('#server/api/products/index.get.ts')
+        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual([{
+            ...products[0],
+            discountedPriceCents: null
+        }])
     })
 
     it('retourne un produit par slug ou une erreur 404', async () => {
         let row: any = {id: 1}
-        vi.stubGlobal('database', () => ({prepare: () => ({bind: () => ({first: async () => row})})}))
+        vi.stubGlobal('database', () => ({prepare: () => ({bind: () => ({first: async () => row}), all: async () => ({results: []})})}))
         vi.stubGlobal('productSelect', 'PRODUCTS')
         vi.stubGlobal('getRouterParam', () => 'mug')
         vi.stubGlobal('mapProductsWithRelations', async () => [{id: 1, slug: 'mug'}])
+        vi.stubGlobal('enrichProductsWithDiscounts', async () => new Map([[1, null]]))
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/products/[slug].get.ts')
-        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toMatchObject({slug: 'mug'})
+        const {default: handler} = await import('#server/api/products/[slug].get.ts')
+        await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toMatchObject({
+            slug: 'mug',
+            discountedPriceCents: null
+        })
         row = null
         await expect(handler({} as H3Event<EventHandlerRequest>)).rejects.toMatchObject({statusCode: 404})
     })
@@ -105,7 +113,7 @@ describe('catalogue public', () => {
         }))
         vi.stubGlobal('mapImage', () => ({id: 4, content: '/images/4'}))
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/content.get.ts')
+        const {default: handler} = await import('#server/api/content.get.ts')
         const output = await handler({} as H3Event<EventHandlerRequest>)
         expect(output.seoTitle).toBe('Titre dynamique')
         expect(output.heroImage).toEqual({id: 4, content: '/images/4'})
@@ -115,7 +123,7 @@ describe('catalogue public', () => {
     it('n’expose que l’autorisation administrateur minimale', async () => {
         vi.stubGlobal('sessionUser', async () => ({email: 'admin@example.test', role: 'admin'}))
         // @ts-ignore
-        const {default: handler} = await import('~/server/api/admin/me.get.ts')
+        const {default: handler} = await import('#server/api/admin/me.get.ts')
         await expect(handler({} as H3Event<EventHandlerRequest>)).resolves.toEqual({
             email: 'admin@example.test',
             role: 'admin',

@@ -8,7 +8,7 @@ afterEach(() => {
 
 const routes = [
     // @ts-ignore
-    {name: 'llms.txt', load: () => import('~/server/routes/llms.txt.get.ts')}
+    {name: 'llms.txt', load: () => import('#server/routes/llms.txt.get.ts')}
 ]
 
 describe.each(routes)('route $name', ({name, load}) => {

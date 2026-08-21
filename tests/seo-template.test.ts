@@ -5,6 +5,8 @@ describe('modèles SEO dynamiques', () => {
     it('remplace toutes les occurrences et normalise les espaces', () => {
         expect(renderSeoTemplate('  [Produit]  par [Site] — [Produit] ', {Produit: 'Mug', Site: 'Angel Dreamer'}))
             .toBe('Mug par Angel Dreamer — Mug')
+        expect(renderSeoTemplate('{Produit} par {Site}', {Produit: 'Mug', Site: 'Angel Dreamer'}))
+            .toBe('Mug par Angel Dreamer')
     })
 
     it('remplace les valeurs absentes par une chaîne vide', () => {

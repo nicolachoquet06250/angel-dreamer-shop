@@ -160,9 +160,4 @@ onBeforeUnmount(() => observer?.disconnect())
   }
 }
 
-@media (min-width: 1001px) {
-  .arrow {
-    display: none !important
-  }
-}
 </style>
