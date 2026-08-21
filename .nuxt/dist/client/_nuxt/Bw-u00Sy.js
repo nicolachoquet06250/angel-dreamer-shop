@@ -1,0 +1,1 @@
+import{a as e}from"./DbwfU3_V.js";function a(r,t){return r?t&&r.darkVariant?{...r.darkVariant,width:r.width,height:r.height}:r:null}function u(){const r=e("theme",()=>!1);return t=>a(t,r.value)}export{a as r,u};

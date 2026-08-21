@@ -1,0 +1,5 @@
+const compte_vue_vue_type_style_index_0_lang_module = "._form_11jr0_2{border-bottom:1px solid var(--line);padding:20px 0}._names_11jr0_7{display:grid;gap:14px;grid-template-columns:1fr 1fr}._form_11jr0_2 label{display:grid;font-size:12px;gap:7px}._form_11jr0_2 input{background:var(--bg);border:1px solid var(--line);color:var(--text);padding:12px;width:100%}._form_11jr0_2 button{background:var(--accent);border:0;color:#fff;cursor:pointer;font-weight:700;margin-top:15px;padding:12px 16px}._error_11jr0_37,._success_11jr0_37{font-size:12px;margin:10px 0 0}._success_11jr0_37{color:#298a4a}._error_11jr0_37{color:var(--accent)}._passwordLink_11jr0_50{display:block;font-size:12px;font-weight:700;margin:20px 0;text-decoration:underline}@media(max-width:560px){._names_11jr0_7{grid-template-columns:1fr}}";
+export {
+  compte_vue_vue_type_style_index_0_lang_module as default
+};
+//# sourceMappingURL=compte-styles-1.mjs-BQb9kqRW.js.map

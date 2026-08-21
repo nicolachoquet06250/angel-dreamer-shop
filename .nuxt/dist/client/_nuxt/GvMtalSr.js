@@ -1,0 +1,1 @@
+import o from"./88q2BA9c.js";import{e as t,p as r,o as p}from"./BfyRTe5E.js";import"./DbwfU3_V.js";import"./6Czbn30x.js";import"./DWWt0_3A.js";import"./DlAUqK2U.js";import"./Bw-u00Sy.js";import"./F6HhYRyA.js";import"./56OGjXA-.js";const k=t({__name:"[tab]",setup(e){return(m,i)=>(p(),r(o))}});export{k as default};

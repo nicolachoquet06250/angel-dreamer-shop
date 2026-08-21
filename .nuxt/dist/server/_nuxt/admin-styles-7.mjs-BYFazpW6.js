@@ -1,0 +1,5 @@
+const HomeContentEditor_vue_vue_type_style_index_2_lang_module = "._light_1x1lq_2{--bg:#f5f2eb;--surface:#fffdf8;--text:#0e0e0d;--muted:#6c675e;--line:#d7d1c8;background:#f5f2eb!important;color:#0e0e0d!important}._light_1x1lq_2,._light_1x1lq_2>div{border-color:#d7d1c8!important}._dark_1x1lq_17{--bg:#111210;--surface:#181916;--text:#f1eadf;--muted:#aaa399;--line:#383a35;background:#111210!important;color:#f1eadf!important}._dark_1x1lq_17,._dark_1x1lq_17>div{border-color:#383a35!important}._heroLight_1x1lq_32{background-color:#f5f2eb!important;color:#111!important}._heroDark_1x1lq_37{background-color:#222!important;color:#fff!important}._workshopDark_1x1lq_42{background:#181916!important;border-color:#383a35!important}._workshopDark_1x1lq_42 p{color:#aaa399!important}";
+export {
+  HomeContentEditor_vue_vue_type_style_index_2_lang_module as default
+};
+//# sourceMappingURL=admin-styles-7.mjs-BYFazpW6.js.map
