@@ -15,6 +15,7 @@ import {
 import styles from '~/assets/css/site.module.css';
 import mediaIcon from '~/assets/icons/image.png';
 import trashIcon from '~/assets/icons/trash.png';
+import copyIcon from '~/assets/icons/copy.png';
 import {renderSeoTemplate} from '~/utils/seo-template';
 import {
   type AdminMainTab,

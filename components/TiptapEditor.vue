@@ -25,6 +25,7 @@ const editor = useEditor({
 
 watch(() => props.modelValue, (value) => {
   if (editor.value && editor.value.getHTML() !== value) {
+    // @ts-ignore
     editor.value.commands.setContent(value, false)
   }
 })
